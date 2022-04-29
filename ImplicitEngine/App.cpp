@@ -9,8 +9,8 @@ App::App()
 
 bool App::OnInit()
 {
-	freopen("log.txt", "w", stdout);
-	freopen("err.txt", "w", stderr);
+	freopen("log.log", "w", stdout);
+	freopen("err.log", "w", stderr);
 
 	frame = new Main;
 	frame->Show();
