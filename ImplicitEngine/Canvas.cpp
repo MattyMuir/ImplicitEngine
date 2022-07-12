@@ -8,7 +8,8 @@ wxBEGIN_EVENT_TABLE(Canvas, wxPanel)
     EVT_KEY_DOWN(Canvas::OnKeyDown)
 wxEND_EVENT_TABLE()
 
-Canvas::Canvas(wxWindow* parent, int* attribs) : wxGLCanvas(parent, wxID_ANY, attribs)
+Canvas::Canvas(wxWindow* parent, int* attribs)
+    : wxGLCanvas(parent, wxID_ANY, attribs)
 {
 	SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 	mainPtr = (Main*)parent;
@@ -40,8 +41,6 @@ Canvas::Canvas(wxWindow* parent, int* attribs) : wxGLCanvas(parent, wxID_ANY, at
 
     vbl->Push<float>(2);
     va->AddVBuffer(*vb, *vbl);
-
-    SetWireframe(false);
 }
 
 Canvas::~Canvas()

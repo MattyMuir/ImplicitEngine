@@ -26,7 +26,7 @@ public:
 	Main* mainPtr;
 
 protected:
-	int w, h;
+	int w = 0, h = 0;
 
 	wxGLContext* context;
 	VertexBuffer* vb;
