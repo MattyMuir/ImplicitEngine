@@ -18,7 +18,7 @@
 
 class Main;
 
-class Canvas : wxGLCanvas
+class Canvas : public wxGLCanvas
 {
 public:
 	Canvas(wxWindow* parent, int* attribs);

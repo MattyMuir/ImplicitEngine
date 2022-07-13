@@ -15,6 +15,9 @@
     <Filter Include="OpenGL">
       <UniqueIdentifier>{d2e0bf3a-e1ac-4039-9218-a31517c7149e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Icons">
+      <UniqueIdentifier>{fde3539b-05fb-426d-8acd-5553e36a5573}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h">
@@ -58,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="Function.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gearIcon.h">
+      <Filter>Icons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -23,6 +23,7 @@
     <ClInclude Include="Bounds.h" />
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="Function.h" />
+    <ClInclude Include="gearIcon.h" />
     <ClInclude Include="glall.h" />
     <ClInclude Include="glhelpers.h" />
     <ClInclude Include="IndexBuffer.h" />
