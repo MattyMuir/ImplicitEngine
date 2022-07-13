@@ -1,20 +1,22 @@
 #pragma once
-#include "wx/wx.h"
-
-#include "glall.h"
-#include "glhelpers.h"
+// wxWidgets includes
+#include <wx/wx.h>
 #include <wx/glcanvas.h>
 
+//STL includes
 #include <string>
 
+// OpenGL includes
+#include "glall.h"
+#include "glhelpers.h"
 #include "VertexBuffer.h"
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "Shader.h"
 
+// Custom header files
+#include "FilteringRenderer.h"
 #include "Timer.h"
-
-#define DYNAMIC_RESIZE 1
 
 class Main;
 
@@ -33,6 +35,8 @@ protected:
 	VertexBufferLayout* vbl;
 	VertexArray* va;
 	Shader* shader;
+
+	FilteringRenderer* renderer;
 
 	void OnDraw();
 	void OnPaint(wxPaintEvent& evt);

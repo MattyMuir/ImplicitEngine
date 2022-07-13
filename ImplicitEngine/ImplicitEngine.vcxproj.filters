@@ -65,6 +65,9 @@
     <ClInclude Include="gearIcon.h">
       <Filter>Icons</Filter>
     </ClInclude>
+    <ClInclude Include="FilteringRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -89,6 +92,9 @@
       <Filter>OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FilteringRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

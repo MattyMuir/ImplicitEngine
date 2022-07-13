@@ -29,12 +29,12 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "Window Application", wxPoint(30, 30),
 
 	// Top bar
 	topBar = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(0, 35));
-	detailLabel = new wxStaticText(topBar, wxID_ANY, "Render Detail", wxPoint(10, 10), wxSize(75, 20));
-	detailSpinner = new wxSpinCtrl(topBar, 10001, "", wxPoint(100, 5), wxSize(50, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 0, 10, 5);
+	detailLabel = new wxStaticText(topBar, wxID_ANY, "Plot Detail", wxPoint(10, 10), wxSize(75, 20));
+	detailSpinner = new wxSpinCtrl(topBar, 10001, "", wxPoint(90, 5), wxSize(50, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 0, 10, 5);
 
-	detailGearButton = new wxButton(topBar, 10002, "", wxPoint(155, 5), wxSize(25, 25));
+	detailGearButton = new wxButton(topBar, 10002, "", wxPoint(140, 5), wxSize(25, 25));
 	detailGearButton->SetBitmap(wxImage(25, 25, gearCol, gearAlpha, true));
-	detailGearButton->SetToolTip("Extra render settings");
+	detailGearButton->SetToolTip("Advanced render settings");
 
 	// Main controls
 	horizSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
@@ -79,7 +79,7 @@ void Main::OnMenuExit(wxCommandEvent& evt)
 
 void Main::OnGearPressed(wxCommandEvent& evt)
 {
-	wxDialog* dialog = new wxDialog(this, wxID_ANY, "Extra Render Settings", wxDefaultPosition, wxSize(225, 135));
+	wxDialog* dialog = new wxDialog(this, wxID_ANY, "Advanced Render Settings", wxDefaultPosition, wxSize(225, 135));
 	wxPanel* dialogPanel = new wxPanel(dialog);
 	dialogPanel->SetFocus();
 

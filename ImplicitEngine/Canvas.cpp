@@ -50,6 +50,8 @@ Canvas::~Canvas()
     delete vbl;
     delete va;
     delete shader;
+
+    delete renderer;
 }
 
 void Canvas::OnDraw()
