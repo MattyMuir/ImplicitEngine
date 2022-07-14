@@ -6,3 +6,8 @@ FilteringRenderer::FilteringRenderer(CallbackFun refreshFun, int seedNum_, int f
 	// Initialize thread pool
 	// TODO
 }
+
+void FilteringRenderer::ProcessJob(Job* job)
+{
+	// TODO
+}

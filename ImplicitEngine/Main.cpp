@@ -6,7 +6,7 @@ wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	EVT_BUTTON(10002, Main::OnGearPressed)
 wxEND_EVENT_TABLE()
 
-Main::Main() : wxFrame(nullptr, wxID_ANY, "Window Application", wxPoint(30, 30), wxSize(600, 600))
+Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxSize(600, 600))
 {
 	// Menu setup
 	menuBar = new wxMenuBar();
@@ -25,7 +25,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "Window Application", wxPoint(30, 30),
 	menuBar->Append(fileMenu, "File");
 	menuBar->Append(viewMenu, "View");
 
-	this->SetMenuBar(menuBar);
+	SetMenuBar(menuBar);
 
 	// Top bar
 	topBar = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(0, 35));
@@ -64,7 +64,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "Window Application", wxPoint(30, 30),
 	vertSizer->Add(topBar, 0, wxEXPAND);
 	vertSizer->Add(horizSplitter, 1, wxEXPAND);
 
-	this->SetSizer(vertSizer);
+	SetSizer(vertSizer);
 }
 
 Main::~Main()
@@ -74,7 +74,7 @@ Main::~Main()
 
 void Main::OnMenuExit(wxCommandEvent& evt)
 {
-	this->Destroy();
+	Destroy();
 }
 
 void Main::OnGearPressed(wxCommandEvent& evt)

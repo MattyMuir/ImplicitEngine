@@ -4,8 +4,8 @@
 wxBEGIN_EVENT_TABLE(Canvas, wxPanel)
 	EVT_PAINT(Canvas::OnPaint)
 	EVT_SIZE(Canvas::Resized)
-    EVT_IDLE(Canvas::OnIdle)
-    EVT_KEY_DOWN(Canvas::OnKeyDown)
+    EVT_MOUSEWHEEL(Canvas::OnScroll)
+    EVT_MOTION(Canvas::OnMouseMove)
 wxEND_EVENT_TABLE()
 
 Canvas::Canvas(wxWindow* parent, int* attribs)
@@ -41,6 +41,9 @@ Canvas::Canvas(wxWindow* parent, int* attribs)
 
     vbl->Push<float>(2);
     va->AddVBuffer(*vb, *vbl);
+
+    // Initialize renderer object
+    renderer = new FilteringRenderer([&]() { this->JobProcessingFinished(); });
 }
 
 Canvas::~Canvas()
@@ -54,6 +57,11 @@ Canvas::~Canvas()
     delete renderer;
 }
 
+void Canvas::JobProcessingFinished()
+{
+    Refresh();
+}
+
 void Canvas::OnDraw()
 {
     TIMER(frame);
@@ -63,8 +71,15 @@ void Canvas::OnDraw()
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Drawing code here
-    float v[6] = { -0.5, -0.5, 0.0, 0.5, 0.5, -0.5 };
-    vb->SetData(v, sizeof(v));
+    double world[] = { -0.5, -0.5, 0.0, 0.5, 0.5, -0.5 };
+    float screen[sizeof(world) / sizeof(double)];
+
+    for (int i = 0; i < sizeof(world) / sizeof(double) / 2; i++)
+    {
+        ToScreen(screen[i * 2], screen[i * 2 + 1], world[i * 2], world[i * 2 + 1]);
+    }
+
+    vb->SetData(screen, sizeof(screen));
 
     glDrawArrays(GL_TRIANGLES, 0, vb->Size());
 
@@ -76,25 +91,75 @@ void Canvas::OnDraw()
 void Canvas::OnPaint(wxPaintEvent& evt)
 {
 	GetSize(&w, &h);
+    bounds = { (double)w / relXScale * (xOffset - 1),
+        (double)h / relYScale * (yOffset - 1),
+        (double)w / relXScale * (xOffset + 1),
+        (double)h / relYScale * (yOffset + 1) };
+
     OnDraw();
 	evt.Skip();
 }
 
 void Canvas::Resized(wxSizeEvent& evt)
 {
+    if (w)
+    {
+        int newW, newH;
+        GetSize(&newW, &newH);
+        xOffset *= (double)w / newW;
+        yOffset *= (double)h / newH;
+    }
+    
 	evt.Skip();
 }
 
-void Canvas::OnIdle(wxIdleEvent& evt)
+void Canvas::OnScroll(wxMouseEvent& evt)
 {
+    // Zoom
+    double factor = 1.5;
+    if (evt.GetWheelRotation() < 0) { factor = 1.0 / factor; }
+
+    double mouseX = evt.GetX();
+    double mouseY = evt.GetY();
+
+    xOffset += (factor - 1) * (2 * mouseX / w + xOffset - 1);
+    yOffset += (factor - 1) * (-2 * mouseY / h + yOffset + 1);
+
+    relXScale *= factor;
+    relYScale *= factor;
+
+    Refresh();
     evt.Skip();
 }
 
-void Canvas::OnKeyDown(wxKeyEvent& evt)
+void Canvas::OnMouseMove(wxMouseEvent& evt)
 {
-    if (evt.GetKeyCode() == WXK_SPACE)
+    if (!evt.LeftIsDown())
     {
-        // Keyboard input processing
+        lastMouse.valid = false;
+    }
+    else
+    {
+        if (lastMouse.valid)
+            OnMouseDrag((double)evt.GetX() - lastMouse.x, (double)evt.GetY() - lastMouse.y);
+
+        lastMouse.valid = true;
+        lastMouse.x = evt.GetX();
+        lastMouse.y = evt.GetY();
     }
     evt.Skip();
+}
+
+void Canvas::OnMouseDrag(double delX, double delY)
+{
+    xOffset -= delX / w * 2;
+    yOffset += delY / h * 2;
+
+    Refresh();
+}
+
+void Canvas::ToScreen(float& xout, float& yout, double x, double y)
+{
+    xout = x * relXScale / w - xOffset;
+    yout = y * relYScale / h - yOffset;
 }

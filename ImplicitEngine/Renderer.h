@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <functional>
 #include <thread>
 #include <mutex>
 
@@ -7,7 +8,9 @@
 #include "Function.h"
 
 enum class JobStatus { OUTDATED, PROCESSING, COMPLETE };
-typedef void (*CallbackFun)();
+typedef std::function<void()> CallbackFun;
+
+class Canvas;
 
 struct Job
 {
@@ -24,13 +27,16 @@ public:
 	~Renderer();
 
 	void JobPollLoop();
-	virtual void ProcessJob(Job* job) = 0;
 
 protected:
+	virtual void ProcessJob(Job* job) = 0;
+
 	std::vector<Job*> jobs;
 	std::mutex jobMutex;
 	CallbackFun refreshCallback;
 	volatile bool active = true;
 
 	std::thread jobPollThread;
+
+	friend Canvas;
 };
