@@ -1,6 +1,8 @@
 #pragma once
 #include "Renderer.h"
 
+#include <BS_thread_pool.hpp>
+
 class FilteringRenderer : public Renderer
 {
 public:
@@ -8,6 +10,8 @@ public:
 
 protected:
 	void ProcessJob(Job* job);
+
+	BS::thread_pool pool;
 
 	int seedNum;
 	int filterMeshRes;
