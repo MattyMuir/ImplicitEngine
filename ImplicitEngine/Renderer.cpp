@@ -9,6 +9,9 @@ Renderer::~Renderer()
 {
 	active = false;
 	jobPollThread.join();
+
+	for (Job* job : jobs)
+		delete job;
 }
 
 void Renderer::JobPollLoop()
@@ -38,4 +41,22 @@ void Renderer::JobPollLoop()
 			refreshCallback();
 		}
 	}
+}
+
+void Renderer::NewJob(const Function& func, const Bounds& bounds, size_t id)
+{
+	jobMutex.lock();
+	jobs.push_back(new Job(func, bounds, id));
+	jobMutex.unlock();
+}
+
+void Renderer::DeleteJob(size_t id)
+{
+	jobMutex.lock();
+	auto pos = std::find_if(jobs.begin(), jobs.end(), [id](Job* job) { return job->jobID == id; });
+	Job* ptr = *pos;
+	jobs.erase(pos);
+	jobMutex.unlock();
+
+	delete ptr;
 }

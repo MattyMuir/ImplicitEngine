@@ -40,7 +40,9 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	horizSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
 
 	// Initialize editable list
-	equationList = new wxEditableListBox(horizSplitter, wxID_ANY, "Equations");
+	equationList = new wxEditableListBox(horizSplitter, 5000, "Equations");
+	equationList->GetListCtrl()->Bind(wxEVT_LIST_INSERT_ITEM, &Main::OnNewEquation, this);
+	equationList->GetListCtrl()->Bind(wxEVT_LIST_DELETE_ITEM, &Main::OnEquationDelete, this);
 	equationList->SetFocus();
 
 	// Initialize canvas
@@ -93,4 +95,22 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	wxSpinCtrl* finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(60, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 3, 12, 9);
 
 	dialog->ShowModal();
+}
+
+void Main::OnNewEquation(wxListEvent& evt)
+{
+	// Assign new equation with custom ID
+	size_t id = nextEqnID++;
+	equationList->GetListCtrl()->SetItemData(evt.GetIndex() - 1, id);
+
+	canvas->renderer->NewJob(Function(""), canvas->bounds, id);
+
+	evt.Skip();
+}
+
+void Main::OnEquationDelete(wxListEvent& evt)
+{
+	canvas->renderer->DeleteJob(evt.GetData());
+	canvas->Refresh();
+	evt.Skip();
 }

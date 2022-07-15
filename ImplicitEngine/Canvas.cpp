@@ -91,10 +91,7 @@ void Canvas::OnDraw()
 void Canvas::OnPaint(wxPaintEvent& evt)
 {
 	GetSize(&w, &h);
-    bounds = { (double)w / relXScale * (xOffset - 1),
-        (double)h / relYScale * (yOffset - 1),
-        (double)w / relXScale * (xOffset + 1),
-        (double)h / relYScale * (yOffset + 1) };
+    RecalculateBounds();
 
     OnDraw();
 	evt.Skip();
@@ -108,6 +105,8 @@ void Canvas::Resized(wxSizeEvent& evt)
         GetSize(&newW, &newH);
         xOffset *= (double)w / newW;
         yOffset *= (double)h / newH;
+
+        UpdateJobs();
     }
     
 	evt.Skip();
@@ -128,6 +127,7 @@ void Canvas::OnScroll(wxMouseEvent& evt)
     relXScale *= factor;
     relYScale *= factor;
 
+    UpdateJobs();
     Refresh();
     evt.Skip();
 }
@@ -155,6 +155,7 @@ void Canvas::OnMouseDrag(double delX, double delY)
     xOffset -= delX / w * 2;
     yOffset += delY / h * 2;
 
+    UpdateJobs();
     Refresh();
 }
 
@@ -162,4 +163,24 @@ void Canvas::ToScreen(float& xout, float& yout, double x, double y)
 {
     xout = x * relXScale / w - xOffset;
     yout = y * relYScale / h - yOffset;
+}
+
+void Canvas::RecalculateBounds()
+{
+    bounds = { (double)w / relXScale * (xOffset - 1),
+        (double)h / relYScale * (yOffset - 1),
+        (double)w / relXScale * (xOffset + 1),
+        (double)h / relYScale * (yOffset + 1) };
+}
+
+void Canvas::UpdateJobs()
+{
+    std::vector<Job*>& jobs = renderer->jobs;
+
+    RecalculateBounds();
+    for (Job* job : jobs)
+    {
+        job->bounds = bounds;
+        job->status = JobStatus::OUTDATED;
+    }
 }

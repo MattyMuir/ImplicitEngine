@@ -2,7 +2,10 @@
 #include <wx/wx.h>
 #include <wx/splitter.h>
 #include <wx/spinctrl.h>
+#include <wx/listctrl.h>
 #include <wx/editlbox.h>
+
+#include <atomic>
 
 #include "gearIcon.h"
 
@@ -18,6 +21,9 @@ protected:
 
 	void OnMenuExit(wxCommandEvent& evt);
 	void OnGearPressed(wxCommandEvent& evt);
+
+	void OnNewEquation(wxListEvent& evt);
+	void OnEquationDelete(wxListEvent& evt);
 
 	// Menu
 	wxMenuBar* menuBar = nullptr;
@@ -37,6 +43,7 @@ protected:
 
 	// Main controls
 	wxEditableListBox* equationList = nullptr;
+	std::atomic<size_t> nextEqnID = 15000;
 
 	// Canvas
 	bool useAntialiasing = true;

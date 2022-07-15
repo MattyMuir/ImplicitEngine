@@ -26,9 +26,16 @@ public:
 		Construct(exprStr_);
 	}
 
+	// Copy constructor
 	Function(const Function& other)
 	{
 		Construct(other.exprStr);
+	}
+
+	// Move constructor
+	Function(Function&& other)
+	{
+		throw;
 	}
 
 	double operator()(double x_, double y_)

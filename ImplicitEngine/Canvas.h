@@ -64,5 +64,9 @@ protected:
 	void OnMouseDrag(double delX, double delY);
 	void ToScreen(float& xout, float& yout, double x, double y);
 
+	void RecalculateBounds();
+	void UpdateJobs();
+
+	friend Main;
 	wxDECLARE_EVENT_TABLE();
 };
