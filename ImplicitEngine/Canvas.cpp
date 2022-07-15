@@ -71,17 +71,22 @@ void Canvas::OnDraw()
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Drawing code here
-    double world[] = { -0.5, -0.5, 0.0, 0.5, 0.5, -0.5 };
-    float screen[sizeof(world) / sizeof(double)];
-
-    for (int i = 0; i < sizeof(world) / sizeof(double) / 2; i++)
+    for (Job* job : renderer->jobs)
     {
-        ToScreen(screen[i * 2], screen[i * 2 + 1], world[i * 2], world[i * 2 + 1]);
+        std::vector<float> screenVerts;
+        screenVerts.reserve(job->bufferedVerts.size());
+
+        float sx, sy;
+        for (int i = 0; i < job->bufferedVerts.size() / 2; i++)
+        {
+            ToScreen(sx, sy, job->bufferedVerts[i * 2], job->bufferedVerts[i * 2 + 1]);
+            screenVerts.push_back(sx);
+            screenVerts.push_back(sy);
+        }
+
+        vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
+        glDrawArrays(GL_TRIANGLES, 0, vb->Size());
     }
-
-    vb->SetData(screen, sizeof(screen));
-
-    glDrawArrays(GL_TRIANGLES, 0, vb->Size());
 
     SwapBuffers();
     glFinish();

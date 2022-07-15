@@ -5,6 +5,7 @@
 #include <wx/listctrl.h>
 #include <wx/editlbox.h>
 
+#include <sstream>
 #include <atomic>
 
 #include "gearIcon.h"
@@ -22,8 +23,10 @@ protected:
 	void OnMenuExit(wxCommandEvent& evt);
 	void OnGearPressed(wxCommandEvent& evt);
 
-	void OnNewEquation(wxListEvent& evt);
+	void OnEquationEdit(wxListEvent& evt);
 	void OnEquationDelete(wxListEvent& evt);
+
+	std::string ProcessEquationString(std::string_view eqnStr);
 
 	// Menu
 	wxMenuBar* menuBar = nullptr;

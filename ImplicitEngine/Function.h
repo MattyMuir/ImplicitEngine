@@ -19,7 +19,6 @@
 class Function
 {
 public:
-	Function() {}
 #if USE_EXPRTK == 1
 	Function(std::string_view exprStr_)
 	{
@@ -45,14 +44,15 @@ public:
 		return expr.value();
 	}
 #else
-	Function(const std::string& funcExpr_) {}
+	Function(std::string_view exprStr_)
+		: exprStr(exprStr_) {}
+
 	FUNC double operator()(double x, double y)
 	{
 		return x * x + y * y - 1;
 	}
 #endif
 
-private:
 #if USE_EXPRTK == 1
 	void Construct(std::string_view exprStr_)
 	{
@@ -68,6 +68,6 @@ private:
 
 	double x = 0, y = 0;
 	exprtk::expression<double> expr;
-	std::string exprStr;
 #endif
+	std::string exprStr;
 };

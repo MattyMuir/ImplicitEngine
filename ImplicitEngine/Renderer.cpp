@@ -11,7 +11,10 @@ Renderer::~Renderer()
 	jobPollThread.join();
 
 	for (Job* job : jobs)
+	{
+		std::cout << job->func.exprStr << std::endl;
 		delete job;
+	}
 }
 
 void Renderer::JobPollLoop()
@@ -29,7 +32,12 @@ void Renderer::JobPollLoop()
 				outdatedJobs = true;
 				allComplete = false;
 
+				job->status = JobStatus::PROCESSING;
+				job->verts.clear();
 				ProcessJob(job);
+				job->bufferedVerts = job->verts;
+				job->status = JobStatus::COMPLETE;
+				
 				break;
 			}
 		}
@@ -43,10 +51,19 @@ void Renderer::JobPollLoop()
 	}
 }
 
-void Renderer::NewJob(const Function& func, const Bounds& bounds, size_t id)
+void Renderer::NewJob(std::string_view funcStr, const Bounds& bounds, size_t id)
 {
 	jobMutex.lock();
-	jobs.push_back(new Job(func, bounds, id));
+	jobs.push_back(new Job(funcStr, bounds, id));
+	jobMutex.unlock();
+}
+
+void Renderer::EditJob(size_t id, std::string_view newFunc)
+{
+	jobMutex.lock();
+	Job* job = *std::find_if(jobs.begin(), jobs.end(), [id](Job* job) { return job->jobID == id; });
+	job->func = newFunc;
+	job->status = JobStatus::OUTDATED;
 	jobMutex.unlock();
 }
 
@@ -54,9 +71,9 @@ void Renderer::DeleteJob(size_t id)
 {
 	jobMutex.lock();
 	auto pos = std::find_if(jobs.begin(), jobs.end(), [id](Job* job) { return job->jobID == id; });
-	Job* ptr = *pos;
+	Job* job = *pos;
 	jobs.erase(pos);
 	jobMutex.unlock();
 
-	delete ptr;
+	delete job;
 }

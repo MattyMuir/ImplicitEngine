@@ -41,9 +41,9 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 
 	// Initialize editable list
 	equationList = new wxEditableListBox(horizSplitter, 5000, "Equations");
-	equationList->GetListCtrl()->Bind(wxEVT_LIST_INSERT_ITEM, &Main::OnNewEquation, this);
 	equationList->GetListCtrl()->Bind(wxEVT_LIST_DELETE_ITEM, &Main::OnEquationDelete, this);
 	equationList->SetFocus();
+	equationList->GetListCtrl()->Bind(wxEVT_LIST_END_LABEL_EDIT, &Main::OnEquationEdit, this);
 
 	// Initialize canvas
 	int attribs[] = { WX_GL_SAMPLE_BUFFERS, 1,
@@ -97,14 +97,30 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	dialog->ShowModal();
 }
 
-void Main::OnNewEquation(wxListEvent& evt)
+void Main::OnEquationEdit(wxListEvent& evt)
 {
-	// Assign new equation with custom ID
-	size_t id = nextEqnID++;
-	equationList->GetListCtrl()->SetItemData(evt.GetIndex() - 1, id);
+	int i = evt.GetIndex();
+	size_t data = equationList->GetListCtrl()->GetItemData(i);
+	if (!data)
+	{
+		// New equation
+		// Assign new equation with custom ID
+		size_t id = nextEqnID++;
+		equationList->GetListCtrl()->SetItemData(i, id);
 
-	canvas->renderer->NewJob(Function(""), canvas->bounds, id);
+		std::string eqnStr = evt.GetText().ToStdString();
+		std::string funcStr = ProcessEquationString(eqnStr);
+		canvas->renderer->NewJob(funcStr, canvas->bounds, id);
+	}
+	else
+	{
+		// Edit existing equation
+		size_t id = data;
 
+		std::string eqnStr = evt.GetText().ToStdString();
+		std::string funcStr = ProcessEquationString(eqnStr);
+		canvas->renderer->EditJob(id, funcStr);
+	}
 	evt.Skip();
 }
 
@@ -113,4 +129,16 @@ void Main::OnEquationDelete(wxListEvent& evt)
 	canvas->renderer->DeleteJob(evt.GetData());
 	canvas->Refresh();
 	evt.Skip();
+}
+
+std::string Main::ProcessEquationString(std::string_view eqnStr)
+{
+	std::stringstream ss;
+	ss << eqnStr;
+
+	std::string left, right;
+	std::getline(ss, left, '=');
+	std::getline(ss, right, '=');
+
+	return left + "-(" + right + ")";
 }
