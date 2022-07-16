@@ -59,9 +59,6 @@
     <ClInclude Include="Bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Function.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="gearIcon.h">
       <Filter>Icons</Filter>
     </ClInclude>
@@ -72,6 +69,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Seed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Function.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -104,6 +104,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ProximalBracketingGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Function.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

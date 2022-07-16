@@ -1,7 +1,8 @@
 #pragma once
 #include <iostream>
-#include <vector>
+#include <list>
 #include <memory>
+#include <functional>
 #include <thread>
 #include <mutex>
 
