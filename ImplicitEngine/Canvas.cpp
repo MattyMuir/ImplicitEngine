@@ -64,14 +64,13 @@ void Canvas::JobProcessingFinished()
 
 void Canvas::OnDraw()
 {
-    TIMER(frame);
     glViewport(0, 0, w, h);
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Drawing code here
-    for (Job* job : renderer->jobs)
+    for (auto job : renderer->jobs)
     {
         std::vector<float> screenVerts;
         screenVerts.reserve(job->bufferedVerts.size());
@@ -89,8 +88,6 @@ void Canvas::OnDraw()
     }
 
     SwapBuffers();
-    glFinish();
-    STOP_LOG(frame);
 }
 
 void Canvas::OnPaint(wxPaintEvent& evt)
@@ -180,10 +177,8 @@ void Canvas::RecalculateBounds()
 
 void Canvas::UpdateJobs()
 {
-    std::vector<Job*>& jobs = renderer->jobs;
-
     RecalculateBounds();
-    for (Job* job : jobs)
+    for (auto job : renderer->jobs)
     {
         job->bounds = bounds;
         job->status = JobStatus::OUTDATED;

@@ -41,8 +41,7 @@ public:
 protected:
 	virtual void ProcessJob(Job* job) = 0;
 
-	std::vector<Job*> jobs;
-	std::mutex jobMutex;
+	std::list<std::shared_ptr<Job>> jobs;
 	CallbackFun refreshCallback;
 	volatile bool active = true;
 
