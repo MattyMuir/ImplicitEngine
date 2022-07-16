@@ -31,9 +31,7 @@ void Renderer::JobPollLoop()
 
 				job->status = JobStatus::PROCESSING;
 				ProcessJob(job.get());
-				job->dataMutex.lock();
 				job->bufferedVerts = job->verts;
-				job->dataMutex.unlock();
 				if (job->status == JobStatus::PROCESSING)
 					job->status = JobStatus::COMPLETE;
 

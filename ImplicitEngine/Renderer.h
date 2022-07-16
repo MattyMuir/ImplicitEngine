@@ -24,7 +24,6 @@ struct Job
 	JobStatus status = JobStatus::OUTDATED;
 	Bounds bounds;
 	FunctionPack funcs;
-	std::mutex dataMutex;
 	std::vector<double> verts, bufferedVerts;
 	size_t jobID;
 };

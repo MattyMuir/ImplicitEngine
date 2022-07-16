@@ -10,8 +10,6 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 
 	srand(dist(mt));
 
-	seeds->clear();
-
 	double w = bounds.w();
 	double h = bounds.h();
 
