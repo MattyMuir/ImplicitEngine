@@ -7,8 +7,8 @@
 #include <mutex>
 
 #include "Bounds.h"
-#include "Function.h"
 #include "Timer.h"
+#include "FunctionPack.h"
 
 enum class JobStatus { OUTDATED, PROCESSING, COMPLETE };
 typedef std::function<void()> CallbackFun;
@@ -19,11 +19,12 @@ class Main;
 struct Job
 {
 	Job(std::string_view funcStr, const Bounds& bounds_, size_t jobID_)
-		: func(funcStr), bounds(bounds_), jobID(jobID_) {}
+		: funcs(funcStr, 1), bounds(bounds_), jobID(jobID_) {}
 
 	JobStatus status = JobStatus::OUTDATED;
 	Bounds bounds;
-	Function func;
+	FunctionPack funcs;
+	std::mutex dataMutex;
 	std::vector<double> verts, bufferedVerts;
 	size_t jobID;
 };

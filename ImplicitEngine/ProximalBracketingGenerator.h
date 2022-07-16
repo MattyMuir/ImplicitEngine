@@ -24,14 +24,10 @@ private:
 class ProximalBracketingGenerator
 {
 public:
-	ProximalBracketingGenerator(Function& func_, const Bounds& bounds_, int maxEval_);
+	ProximalBracketingGenerator() {};
 
-	void Generate(std::vector<Seed>& seeds, int num);
-	bool ITPRefine(Seed& a, Seed b, int maxIter);
+	static void Generate(std::vector<Seed>* seeds, Function* funcPtr, Bounds bounds, int maxEval, int seedNum);
 
-private:
-	Function* funcPtr;
-	Bounds bounds;
-
-	int maxEval;
+protected:
+	static bool ITPRefine(Seed& a, Seed b, Function* funcPtr, Bounds bounds, int maxIter);
 };

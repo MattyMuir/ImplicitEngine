@@ -31,9 +31,11 @@ void Renderer::JobPollLoop()
 
 				job->status = JobStatus::PROCESSING;
 				ProcessJob(job.get());
+				job->dataMutex.lock();
 				job->bufferedVerts = job->verts;
+				job->dataMutex.unlock();
 				if (job->status == JobStatus::PROCESSING)
-					job->status == JobStatus::COMPLETE;
+					job->status = JobStatus::COMPLETE;
 
 				break;
 			}
@@ -72,7 +74,7 @@ void Renderer::NewJob(std::string_view funcStr, const Bounds& bounds, size_t id)
 void Renderer::EditJob(size_t id, std::string_view newFunc)
 {
 	std::shared_ptr<Job> job = *std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->jobID == id; });
-	job->func.Construct(newFunc);
+	job->funcs.Change(newFunc);
 	job->status = JobStatus::OUTDATED;
 }
 

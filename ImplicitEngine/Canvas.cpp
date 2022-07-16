@@ -72,6 +72,7 @@ void Canvas::OnDraw()
     // Drawing code here
     for (auto job : renderer->jobs)
     {
+        job->dataMutex.lock();
         std::vector<float> screenVerts;
         screenVerts.reserve(job->bufferedVerts.size());
 
@@ -82,9 +83,11 @@ void Canvas::OnDraw()
             screenVerts.push_back(sx);
             screenVerts.push_back(sy);
         }
+        job->dataMutex.unlock();
 
         vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
-        glDrawArrays(GL_POINTS, 0, vb->Size());
+        std::cout << vb->Size() << std::endl;
+        glDrawArrays(GL_POINTS, 0, 100);
     }
 
     SwapBuffers();

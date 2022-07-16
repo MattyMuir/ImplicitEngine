@@ -1,9 +1,6 @@
 #include "ProximalBracketingGenerator.h"
 
-ProximalBracketingGenerator::ProximalBracketingGenerator(Function& func_, const Bounds& bounds_, int maxEval_)
-	: funcPtr(&func_), bounds(bounds_), maxEval(maxEval_) {}
-
-void ProximalBracketingGenerator::Generate(std::vector<Seed>& seeds, int num)
+void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* funcPtr, Bounds bounds, int maxEval, int seedNum)
 {
 	Function& func = *funcPtr;
 
@@ -13,17 +10,19 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>& seeds, int num)
 
 	srand(dist(mt));
 
+	seeds->clear();
+
 	double w = bounds.w();
 	double h = bounds.h();
 
 	std::vector<Seed> unBracketedSeeds, tempVec;
 	std::vector<std::pair<Seed, Seed>> bracketedSeeds;
-	unBracketedSeeds.reserve(num);
+	unBracketedSeeds.reserve(seedNum);
 
 	int posNum = 0, negNum = 0;
 
 	// Randomly position seeds, evaluate, and add to vec
-	for (int i = 0; i < num; i++)
+	for (int i = 0; i < seedNum; i++)
 	{
 		Seed s = { bounds.xmin + w * (double)rand() / RAND_MAX,
 			bounds.ymin + h * (double)rand() / RAND_MAX };
@@ -41,9 +40,9 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>& seeds, int num)
 	// Find oppositely signed points
 	int newtIter = maxEval / 3;
 	int i = 0;
-	while (std::min(posNum, negNum) < 10 && i < newtIter)
+	while (std::min(posNum, negNum) < 1 && i < newtIter)
 	{
-		std::cout << "No sign flips, performing newton\n";
+		//std::cout << "No sign flips, performing newton\n";
 		i++;
 		posNum = 0; negNum = 0;
 
@@ -62,7 +61,7 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>& seeds, int num)
 			s.y -= 1 * (s.fs * dy) / (dx * dx + dy * dy);
 
 			s.fs = func(s.x, s.y);
-			if (!std::isfinite(s.fs)) { s.active = false; continue; }	
+			if (!std::isfinite(s.fs)) { s.active = false; continue; }
 
 			if (s.fs > 0) posNum++;
 			else if (s.fs < 0) negNum++;
@@ -120,7 +119,7 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>& seeds, int num)
 		auto [at, bt] = boost::math::tools::toms748_solve([&](double t) { return func(s1.x + dx * t, s1.y + dy * t); },
 			0.0, 1.0, s1.fs, s2.fs, StopCondition(absTol / bracketLength), maxIter);
 		double t = (at + bt) / 2;
-		seeds.push_back({ s1.x + dx * t, s1.y + dy * t });
+		seeds->push_back({ s1.x + dx * t, s1.y + dy * t });
 	}
 }
 
@@ -134,7 +133,7 @@ static int sign(double x)
 	return (x > 0) - (x < 0);
 }
 
-bool ProximalBracketingGenerator::ITPRefine(Seed& a, Seed b, int maxIter)
+bool ProximalBracketingGenerator::ITPRefine(Seed& a, Seed b, Function* funcPtr, Bounds bounds, int maxIter)
 {
 	Function& func = *funcPtr;
 	if (!bounds.In(a.x, a.y) && !bounds.In(b.x, b.y))
