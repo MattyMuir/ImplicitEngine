@@ -2,7 +2,7 @@
 #include <string>
 
 // ===== Settings =====
-#define USE_EXPRTK 0
+#define USE_EXPRTK 1
 #define USE_INLINING 1
 // ====================
 

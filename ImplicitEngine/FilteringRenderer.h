@@ -1,7 +1,8 @@
 #pragma once
-#include "Renderer.h"
-
 #include <BS_thread_pool.hpp>
+
+#include "Renderer.h"
+#include "ProximalBracketingGenerator.h"
 
 class FilteringRenderer : public Renderer
 {

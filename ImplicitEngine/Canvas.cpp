@@ -85,7 +85,7 @@ void Canvas::OnDraw()
         }
 
         vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
-        glDrawArrays(GL_TRIANGLES, 0, vb->Size());
+        glDrawArrays(GL_POINTS, 0, vb->Size());
     }
 
     SwapBuffers();
@@ -95,7 +95,6 @@ void Canvas::OnDraw()
 
 void Canvas::OnPaint(wxPaintEvent& evt)
 {
-	GetSize(&w, &h);
     RecalculateBounds();
 
     OnDraw();
@@ -104,15 +103,14 @@ void Canvas::OnPaint(wxPaintEvent& evt)
 
 void Canvas::Resized(wxSizeEvent& evt)
 {
+    int newW, newH;
+    GetSize(&newW, &newH);
     if (w)
     {
-        int newW, newH;
-        GetSize(&newW, &newH);
         xOffset *= (double)w / newW;
         yOffset *= (double)h / newH;
-
-        UpdateJobs();
     }
+    UpdateJobs();
     
 	evt.Skip();
 }
@@ -172,6 +170,8 @@ void Canvas::ToScreen(float& xout, float& yout, double x, double y)
 
 void Canvas::RecalculateBounds()
 {
+    GetSize(&w, &h);
+
     bounds = { (double)w / relXScale * (xOffset - 1),
         (double)h / relYScale * (yOffset - 1),
         (double)w / relXScale * (xOffset + 1),

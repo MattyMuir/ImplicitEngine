@@ -6,8 +6,17 @@ FilteringRenderer::FilteringRenderer(CallbackFun refreshFun, int seedNum_, int f
 
 void FilteringRenderer::ProcessJob(Job* job)
 {
-	// TODO
-	std::this_thread::sleep_for(milliseconds(100));
-	int o = (job->jobID - 15000) * 2;
-	job->verts = { -0.5 + o, -0.5, 0.0 + o, 0.5, o + 0.5 * rand() / RAND_MAX, -0.5 };
+	std::this_thread::sleep_for(milliseconds(5000));
+
+	ProximalBracketingGenerator gen(job->func, job->bounds, 16);
+
+	std::vector<Seed> seeds;
+	gen.Generate(seeds, 1000);
+
+	job->verts.clear();
+	for (const auto& seed : seeds)
+	{
+		job->verts.push_back(seed.x);
+		job->verts.push_back(seed.y);
+	}
 }
