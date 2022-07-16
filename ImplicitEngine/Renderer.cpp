@@ -18,37 +18,6 @@ void Renderer::JobPollLoop()
 	{
 		bool outdatedJobs = false;
 
-		/*// Thread-safe for-loop over jobs
-		int jobIndex = 0;
-		for (;;)
-		{
-			Job* job = nullptr;
-			jobMutex.lock();
-			if (jobIndex < jobs.size())
-			{
-				job = jobs[jobIndex];
-				jobIndex++;
-			}
-			else job = nullptr;
-			jobMutex.unlock();
-
-			if (!job) break;
-
-			if (job->status == JobStatus::OUTDATED)
-			{
-				outdatedJobs = true;
-				allComplete = false;
-
-				job->status = JobStatus::PROCESSING;
-				ProcessJob(job);
-				job->bufferedVerts = job->verts;
-				if (job->status == JobStatus::PROCESSING)
-					job->status == JobStatus::COMPLETE;
-
-				break;
-			}
-		}*/
-
 		// Lock-free, thread-safe loop over jobs
 		decltype(jobs)::iterator it = jobs.begin();
 		while (it != jobs.end())
@@ -70,6 +39,21 @@ void Renderer::JobPollLoop()
 			}
 
 			it++;
+		}
+
+		if (deleteList.size() > 0)
+		{
+			deleteMutex.lock();
+			for (size_t id : deleteList)
+			{
+				auto pos = std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->jobID == id; });
+				jobs.erase(pos);
+			}
+
+			deleteList.clear();
+			deleteMutex.unlock();
+
+			refreshCallback();
 		}
 
 		if (!outdatedJobs && !allComplete)
@@ -94,7 +78,7 @@ void Renderer::EditJob(size_t id, std::string_view newFunc)
 
 void Renderer::DeleteJob(size_t id)
 {
-	auto pos = std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->jobID == id; });
-	std::shared_ptr<Job> job = *pos;
-	jobs.erase(pos);
+	deleteMutex.lock();
+	deleteList.push_back(id);
+	deleteMutex.unlock();
 }

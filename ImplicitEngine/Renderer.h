@@ -42,6 +42,8 @@ protected:
 	virtual void ProcessJob(Job* job) = 0;
 
 	std::list<std::shared_ptr<Job>> jobs;
+	std::mutex deleteMutex;
+	std::list<size_t> deleteList;
 	CallbackFun refreshCallback;
 	volatile bool active = true;
 
