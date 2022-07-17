@@ -23,6 +23,10 @@ protected:
 	void OnMenuExit(wxCommandEvent& evt);
 	void OnGearPressed(wxCommandEvent& evt);
 
+	void OnDisplayStandardOutput(wxCommandEvent& evt);
+	void OnDisplaySeeds(wxCommandEvent& evt);
+	void OnDisplayMesh(wxCommandEvent& evt);
+
 	void OnEquationEdit(wxListEvent& evt);
 	void OnEquationDelete(wxListEvent& evt);
 

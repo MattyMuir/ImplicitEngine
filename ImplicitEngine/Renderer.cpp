@@ -46,7 +46,7 @@ void Renderer::JobPollLoop()
 			deleteMutex.lock();
 			for (size_t id : deleteList)
 			{
-				auto pos = std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->jobID == id; });
+				auto pos = std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->id == id; });
 				jobs.erase(pos);
 			}
 
@@ -71,7 +71,7 @@ void Renderer::NewJob(std::string_view funcStr, const Bounds& bounds, size_t id)
 
 void Renderer::EditJob(size_t id, std::string_view newFunc)
 {
-	std::shared_ptr<Job> job = *std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->jobID == id; });
+	std::shared_ptr<Job> job = *std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->id == id; });
 	job->funcs.Change(newFunc);
 	job->status = JobStatus::OUTDATED;
 }

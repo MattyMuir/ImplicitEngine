@@ -59,7 +59,20 @@ Canvas::~Canvas()
 
 void Canvas::JobProcessingFinished()
 {
+    //std::this_thread::sleep_for(milliseconds(1000));
     Refresh();
+}
+
+void Canvas::DisplaySeeds(bool display)
+{
+    displaySeeds = display;
+    renderer->KeepSeeds(display);
+}
+
+void Canvas::DisplayMeshes(bool display)
+{
+    displayMeshes = display;
+    renderer->KeepMesh(display);
 }
 
 void Canvas::OnDraw()
@@ -72,7 +85,23 @@ void Canvas::OnDraw()
     // Drawing code here
     for (auto job : renderer->jobs)
     {
-        std::vector<float> screenVerts;
+        if (displaySeeds)
+        {
+            // Draw seeds
+            auto seeds = renderer->GetSeeds(job->id);
+            if (seeds.has_value())
+                DrawSeeds(seeds.value().get());
+        }
+
+        if (displayMeshes)
+        {
+            // Draw filtering meshes
+            auto mesh = renderer->GetMesh(job->id);
+            if (mesh.has_value())
+                DrawMesh(mesh.value().get());
+        }
+
+        /*std::vector<float> screenVerts;
         screenVerts.reserve(job->bufferedVerts.size());
 
         double xScale = relXScale / w;
@@ -84,18 +113,21 @@ void Canvas::OnDraw()
         }
 
         vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
-        glDrawArrays(GL_POINTS, 0, screenVerts.size() / 2);
+        glDrawArrays(GL_POINTS, 0, screenVerts.size() / 2);*/
     }
 
     SwapBuffers();
+    glFinish();
 }
 
 void Canvas::OnPaint(wxPaintEvent& evt)
 {
+    refreshing = true;
     RecalculateBounds();
 
     OnDraw();
 	evt.Skip();
+    refreshing = false;
 }
 
 void Canvas::Resized(wxSizeEvent& evt)
@@ -163,6 +195,83 @@ void Canvas::ToScreen(float& xout, float& yout, double x, double y)
 {
     xout = x * relXScale / w - xOffset;
     yout = y * relYScale / h - yOffset;
+}
+
+void Canvas::DrawSeeds(Seeds* seeds)
+{
+    std::vector<float> screenSeeds;
+    
+    // Count seeds
+    size_t num = 0;
+    for (const auto& seedVec : *seeds)
+        num += seedVec.size();
+
+    screenSeeds.reserve(num * 2);
+
+    // Transform seeds to screen coordinates
+    double xScale = relXScale / w;
+    double yScale = relYScale / h;
+    for (const auto& seedVec : *seeds)
+    {
+        for (const Seed& s : seedVec)
+        {
+            screenSeeds.push_back(s.x * xScale - xOffset);
+            screenSeeds.push_back(s.y * yScale - yOffset);
+        }
+    }
+
+    vb->SetData(screenSeeds.data(), screenSeeds.size() * sizeof(float));
+    glDrawArrays(GL_POINTS, 0, num);
+}
+
+void Canvas::DrawMesh(Mesh* mesh)
+{
+    struct Point
+    {
+        float x, y;
+    };
+
+    int dim = mesh->dim;
+    std::vector<Point> verts;
+
+    double boxW = mesh->bounds.w() / dim;
+    double boxH = mesh->bounds.h() / dim;
+
+    double xScale = relXScale / w;
+    double yScale = relYScale / h;
+    for (int by = 0; by < dim; by++)
+    {
+        for (int bx = 0; bx < dim; bx++)
+        {
+            if (!(*mesh).boxes[bx + by * dim]) continue;
+
+            double x1 = mesh->bounds.xmin + boxW * bx;
+            double x2 = x1 + boxW;
+
+            double y1 = mesh->bounds.ymin + boxH * by;
+            double y2 = y1 + boxH;
+
+            // Transform point to screen coordinates
+            float x1s = x1 * xScale - xOffset;
+            float x2s = x2 * xScale - xOffset;
+            float y1s = y1 * yScale - yOffset;
+            float y2s = y2 * yScale - yOffset;
+
+            Point corners[4] = { { x1s, y1s }, { x1s, y2s }, { x2s, y2s }, { x2s, y1s } };
+
+            verts.push_back(corners[0]);
+            verts.push_back(corners[1]);
+            verts.push_back(corners[1]);
+            verts.push_back(corners[2]);
+            verts.push_back(corners[2]);
+            verts.push_back(corners[3]);
+            verts.push_back(corners[3]);
+            verts.push_back(corners[0]);
+        }
+    }
+
+    vb->SetData(verts.data(), verts.size() * sizeof(Point));
+    glDrawArrays(GL_LINES, 0, verts.size());
 }
 
 void Canvas::RecalculateBounds()

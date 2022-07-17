@@ -3,6 +3,9 @@
 
 wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	EVT_MENU(20001, Main::OnMenuExit)
+	EVT_MENU(30001, Main::OnDisplayStandardOutput)
+	EVT_MENU(30002, Main::OnDisplaySeeds)
+	EVT_MENU(30003, Main::OnDisplayMesh)
 	EVT_BUTTON(10002, Main::OnGearPressed)
 wxEND_EVENT_TABLE()
 
@@ -112,6 +115,21 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 		});
 
 	dialog->ShowModal();
+}
+
+void Main::OnDisplayStandardOutput(wxCommandEvent& evt)
+{
+
+}
+
+void Main::OnDisplaySeeds(wxCommandEvent& evt)
+{
+	canvas->DisplaySeeds(evt.IsChecked());
+}
+
+void Main::OnDisplayMesh(wxCommandEvent& evt)
+{
+	canvas->DisplayMeshes(evt.IsChecked());
 }
 
 void Main::OnEquationEdit(wxListEvent& evt)

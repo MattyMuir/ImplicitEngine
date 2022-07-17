@@ -18,14 +18,14 @@ class Main;
 
 struct Job
 {
-	Job(std::string_view funcStr, const Bounds& bounds_, size_t jobID_)
-		: funcs(funcStr, 1), bounds(bounds_), jobID(jobID_) {}
+	Job(std::string_view funcStr, const Bounds& bounds_, size_t id_)
+		: funcs(funcStr, 1), bounds(bounds_), id(id_) {}
 
 	JobStatus status = JobStatus::OUTDATED;
 	Bounds bounds;
 	FunctionPack funcs;
 	std::vector<double> verts, bufferedVerts;
-	size_t jobID;
+	size_t id;
 };
 
 class Renderer
