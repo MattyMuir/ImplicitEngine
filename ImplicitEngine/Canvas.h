@@ -62,8 +62,6 @@ protected:
 	Bounds bounds;
 	MousePosition lastMouse;
 
-	std::atomic<bool> refreshing = false;
-
 	void OnDraw();
 	void OnPaint(wxPaintEvent& evt);
 	void Resized(wxSizeEvent& evt);

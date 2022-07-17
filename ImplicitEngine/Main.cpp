@@ -21,7 +21,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 
 	viewMenu->Append(30001, "Standard Output")->SetCheckable(true);
 	viewMenu->Append(30002, "Prefiltering Seeds")->SetCheckable(true);
-	viewMenu->Append(30003, "Prefiltering mesh")->SetCheckable(true);
+	viewMenu->Append(30003, "Prefiltering Mesh")->SetCheckable(true);
 	wxMenuItemList& menuItemList = viewMenu->GetMenuItems();
 	menuItemList[0]->Check(true);
 

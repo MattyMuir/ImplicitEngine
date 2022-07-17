@@ -59,8 +59,9 @@ Canvas::~Canvas()
 
 void Canvas::JobProcessingFinished()
 {
-    //std::this_thread::sleep_for(milliseconds(1000));
+    Update();
     Refresh();
+    Update();
 }
 
 void Canvas::DisplaySeeds(bool display)
@@ -122,12 +123,10 @@ void Canvas::OnDraw()
 
 void Canvas::OnPaint(wxPaintEvent& evt)
 {
-    refreshing = true;
     RecalculateBounds();
 
     OnDraw();
 	evt.Skip();
-    refreshing = false;
 }
 
 void Canvas::Resized(wxSizeEvent& evt)
