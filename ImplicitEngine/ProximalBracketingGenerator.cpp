@@ -1,6 +1,6 @@
 #include "ProximalBracketingGenerator.h"
 
-void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* funcPtr, Bounds bounds, int maxEval, int seedNum)
+void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* funcPtr, Bounds bounds, int maxEval, int filterMeshRes, int seedNum)
 {
 	Function& func = *funcPtr;
 
@@ -115,15 +115,37 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 		double bracketLength = sqrt(dx * dx + dy * dy);
 
 		auto [at, bt] = boost::math::tools::toms748_solve([&](double t) { return func(s1.x + dx * t, s1.y + dy * t); },
-			0.0, 1.0, s1.fs, s2.fs, StopCondition(absTol / bracketLength), maxIter);
+			0.0, 1.0, s1.fs, s2.fs, StopCondition(s1.x, s1.y, dx, dy, absTol, filterMeshRes, &bounds), maxIter);
 		double t = (at + bt) / 2;
 		seeds->push_back({ s1.x + dx * t, s1.y + dy * t });
 	}
 }
 
+StopCondition::StopCondition(double x0, double y0, double dx, double dy, double absTol, int filterMeshRes, Bounds* bounds)
+{
+	double bracketLength = sqrt(dx * dx + dy * dy);
+	relTol = absTol / bracketLength;
+
+	double filterMeshDim = Pow2(filterMeshRes);
+	boxXScale = dx * filterMeshDim / bounds->w();
+	boxXOffset = (x0 - bounds->xmin) * filterMeshDim / bounds->w();
+
+	boxYScale = dy * filterMeshDim / bounds->h();
+	boxYOffset = (y0 - bounds->ymin) * filterMeshDim / bounds->h();
+}
+
 bool StopCondition::operator()(double at, double bt)
 {
-	return abs(at - bt) < tol;
+	bool withinTol = (abs(at - bt) < relTol);
+
+	int aBoxXI = boxXScale * at + boxXOffset;
+	int aBoxYI = boxYScale * at + boxYOffset;
+	int bBoxXI = boxXScale * bt + boxXOffset;
+	int bBoxYI = boxYScale * bt + boxYOffset;
+
+	bool sameBox = ((aBoxXI == bBoxXI) && (aBoxYI == bBoxYI));
+
+	return (withinTol || sameBox);
 }
 
 static int sign(double x)

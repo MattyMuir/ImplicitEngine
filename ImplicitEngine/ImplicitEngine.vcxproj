@@ -30,6 +30,7 @@
     <ClInclude Include="glhelpers.h" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="pow4.h" />
     <ClInclude Include="ProximalBracketingGenerator.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Seed.h" />
@@ -47,6 +48,7 @@
     <ClCompile Include="FunctionPack.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="pow4.cpp" />
     <ClCompile Include="ProximalBracketingGenerator.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Shader.cpp" />

@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 #include "ProximalBracketingGenerator.h"
+#include "pow4.h"
 
 typedef BS::thread_pool ThreadPool;
 
@@ -32,4 +33,5 @@ protected:
 	int finalMeshRes;
 
 	std::vector<std::vector<Seed>> seeds;
+	std::vector<uint8_t> filterMesh;
 };
