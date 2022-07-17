@@ -55,8 +55,8 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 			double dx = (fxn - s.fs) / (s.x * q);
 			double dy = (fyn - s.fs) / (s.y * q);
 
-			s.x -= 1 * (s.fs * dx) / (dx * dx + dy * dy);
-			s.y -= 1 * (s.fs * dy) / (dx * dx + dy * dy);
+			s.x -= 1.1 * (s.fs * dx) / (dx * dx + dy * dy);
+			s.y -= 1.1 * (s.fs * dy) / (dx * dx + dy * dy);
 
 			s.fs = func(s.x, s.y);
 			if (!std::isfinite(s.fs)) { s.active = false; continue; }

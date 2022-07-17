@@ -5,7 +5,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-#define TIMING 0
+#define TIMING 1
 
 #if TIMING
 #define TIMER(x) Timer x

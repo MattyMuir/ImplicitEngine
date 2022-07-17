@@ -75,16 +75,15 @@ void Canvas::OnDraw()
         std::vector<float> screenVerts;
         screenVerts.reserve(job->bufferedVerts.size());
 
-        float sx, sy;
+        double xScale = relXScale / w;
+        double yScale = relYScale / h;
         for (int i = 0; i < job->bufferedVerts.size() / 2; i++)
         {
-            ToScreen(sx, sy, job->bufferedVerts[i * 2], job->bufferedVerts[i * 2 + 1]);
-            screenVerts.push_back(sx);
-            screenVerts.push_back(sy);
+            screenVerts.push_back(job->bufferedVerts[i * 2] * xScale - xOffset);
+            screenVerts.push_back(job->bufferedVerts[i * 2 + 1] * yScale - yOffset);
         }
 
         vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
-        std::cout << vb->Size() << std::endl;
         glDrawArrays(GL_POINTS, 0, screenVerts.size() / 2);
     }
 

@@ -29,6 +29,7 @@ void Function::Construct(std::string_view exprStr_)
 
 	exprStr = exprStr_;
 	exprtk::symbol_table<double> symbols;
+	symbols.add_constants();
 	symbols.add_variable("x", x);
 	symbols.add_variable("y", y);
 	expr->register_symbol_table(symbols);

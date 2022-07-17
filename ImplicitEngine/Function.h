@@ -17,6 +17,9 @@ public:
 	// Copy constructor
 	Function(const Function& other);
 
+	// Delete move contructor
+	Function(Function&& other) = delete;
+
 	double operator()(double x_, double y_);
 
 	void Construct(std::string_view exprStr_);

@@ -30,7 +30,9 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	// Top bar
 	topBar = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(0, 35));
 	detailLabel = new wxStaticText(topBar, wxID_ANY, "Plot Detail", wxPoint(10, 10), wxSize(75, 20));
-	detailSpinner = new wxSpinCtrl(topBar, 10001, "", wxPoint(90, 5), wxSize(50, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 0, 10, 5);
+	detailSpinner = new wxSpinCtrl(topBar, 10001, "", wxPoint(90, 5), wxSize(50, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 3, 12, 5);
+
+	detailSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetFinalMeshRes(evt.GetValue()); });
 
 	detailGearButton = new wxButton(topBar, 10002, "", wxPoint(140, 5), wxSize(25, 25));
 	detailGearButton->SetBitmap(wxImage(25, 25, gearCol, gearAlpha, true));
@@ -56,6 +58,8 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	int* attribList = attribs;
 	if (!useAntialiasing) attribList += 4;
 	canvas = new Canvas(horizSplitter, attribList);
+
+	detailSpinner->SetValue(canvas->renderer->GetFinalMeshRes());
 
 	// Setup splitter
 	horizSplitter->SplitVertically(equationList, canvas, 200);
@@ -86,13 +90,26 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	dialogPanel->SetFocus();
 
 	wxStaticText* seedNumLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Seeds", wxPoint(10, 8));
-	wxSpinCtrl* seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(60, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 512, 16000, 2048);
+	wxSpinCtrl* seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(60, 25),
+		wxALIGN_LEFT | wxSP_ARROW_KEYS, 256, 131072, canvas->renderer->GetSeedNum());
+
+	seedNumSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetSeedNum(evt.GetValue()); });
 
 	wxStaticText* prefResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Resolution", wxPoint(10, 38));
-	wxSpinCtrl* prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(60, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 2, 8, 5);
+	wxSpinCtrl* prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(60, 25),
+		wxALIGN_LEFT | wxSP_ARROW_KEYS, 2, 8, canvas->renderer->GetFilterMeshRes());
+
+	prefResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetFilterMeshRes(evt.GetValue()); });
 
 	wxStaticText* finalResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Final Mesh Resolution", wxPoint(10, 68));
-	wxSpinCtrl* finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(60, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 3, 12, 9);
+	wxSpinCtrl* finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(60, 25),
+		wxALIGN_LEFT | wxSP_ARROW_KEYS, 3, 12, canvas->renderer->GetFinalMeshRes());
+
+	finalResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt)
+		{
+			canvas->renderer->SetFinalMeshRes(evt.GetValue());
+			detailSpinner->SetValue(evt.GetValue());
+		});
 
 	dialog->ShowModal();
 }
