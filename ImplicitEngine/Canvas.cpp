@@ -31,6 +31,9 @@ Canvas::Canvas(wxWindow* parent, int* attribs)
     }
     wglSwapIntervalEXT(0);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // === Rendering Setup ===
     shader = new Shader(Shader::Compile("basic.shader"));
     shader->Bind();
@@ -44,6 +47,8 @@ Canvas::Canvas(wxWindow* parent, int* attribs)
 
     // Initialize renderer object
     renderer = new FilteringRenderer([&]() { this->JobProcessingFinished(); });
+
+
 }
 
 Canvas::~Canvas()
@@ -219,6 +224,7 @@ void Canvas::DrawSeeds(Seeds* seeds)
         }
     }
 
+    glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
     vb->SetData(screenSeeds.data(), screenSeeds.size() * sizeof(float));
     glDrawArrays(GL_POINTS, 0, num);
 }
@@ -260,17 +266,16 @@ void Canvas::DrawMesh(Mesh* mesh)
 
             verts.push_back(corners[0]);
             verts.push_back(corners[1]);
-            verts.push_back(corners[1]);
             verts.push_back(corners[2]);
             verts.push_back(corners[2]);
-            verts.push_back(corners[3]);
             verts.push_back(corners[3]);
             verts.push_back(corners[0]);
         }
     }
 
+    glUniform4f(shader->GetUniformLocation("col"), 1.0f, 0.0f, 0.0f, 0.2f);
     vb->SetData(verts.data(), verts.size() * sizeof(Point));
-    glDrawArrays(GL_LINES, 0, verts.size());
+    glDrawArrays(GL_TRIANGLES, 0, verts.size());
 }
 
 void Canvas::RecalculateBounds()
