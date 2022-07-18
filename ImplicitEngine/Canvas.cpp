@@ -53,7 +53,6 @@ Canvas::Canvas(wxWindow* parent, const wxGLAttributes& attribs)
 
     // Initialize text renderer
     textRenderer = new TextRenderer;
-    textRenderer->LoadFont("C:\\Windows\\Fonts\\Arial.ttf", "Arial", 48);
 
     shader->Bind();
     va->Bind();
@@ -244,7 +243,7 @@ void Canvas::DrawGrid()
     DrawGridlines(gridW / 5, 0.1f);
 
     // === Draw axis text ===
-    textRenderer->RenderText("Hello", { "Arial", 48 }, w, h, w / 2, h / 2, 1.0f);
+    DrawAxisText({ mantissa, exponent });
     shader->Bind();
     va->Bind();
 }
@@ -304,6 +303,28 @@ std::pair<int, int> Canvas::RoundMajorGridValue(double val)
 
     std::pair<int, int> options[] = { { 5, exponent - 1 }, { 1, exponent }, { 2, exponent }, { 5, exponent }, { 1, exponent + 1 } };
     return options[best];
+}
+
+void Canvas::DrawAxisText(std::pair<int, int> spacingSF)
+{
+    double spacing = spacingSF.first * pow(10, spacingSF.second);
+
+    float xminS = bounds.xmin * relXScale / w - xOffset;
+    float yminS = bounds.ymin * relYScale / h - yOffset;
+    float xmaxS = bounds.xmax * relXScale / w - xOffset;
+    float ymaxS = bounds.ymax * relYScale / h - yOffset;
+
+    double startY = ceil(bounds.ymin / spacing) * spacing;
+    int num = bounds.h() / spacing;
+
+    float screenX = (1 - xOffset) / 2 * w + 2;
+    for (int yi = 0; yi <= num; yi++)
+    {
+        double worldY = startY + spacing * yi;
+        float screenY = (worldY * relYScale / h - yOffset + 1) / 2 * h;
+
+        textRenderer->RenderText(std::format("/", worldY), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
+    }
 }
 
 void Canvas::DrawSeeds(const std::shared_ptr<Seeds>& seeds)

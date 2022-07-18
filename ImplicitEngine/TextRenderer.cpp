@@ -33,15 +33,15 @@ void TextRenderer::LoadFont(std::string_view path, std::string_view name, unsign
 {
 	FT_Face face;
 
-    // Add font to fonts map
-    auto& font = fonts[{ std::string(name), size }];
-	
-	// Load font into face
+    // Load font into face
     if (FT_New_Face(ft, path.data(), 0, &face))
     {
         std::cerr << "Failed to load font: " << path << '\n';
         return;
     }
+
+    // Add font to fonts map
+    auto& font = fonts[{ std::string(name), size }];
 
 	// Set font size
 	FT_Set_Pixel_Sizes(face, 0, size);
@@ -50,8 +50,10 @@ void TextRenderer::LoadFont(std::string_view path, std::string_view name, unsign
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	// Load all characters
-    for (unsigned char c = 0; c < 128; c++)
+    for (unsigned char c = 0; c <= 128; c++)
     {
+        if (c == '-')
+            int x = 3;
         // Load character glyph 
         if (FT_Load_Char(face, c, FT_LOAD_RENDER))
         {
@@ -109,10 +111,10 @@ void TextRenderer::RenderText(std::string_view text, FontMeta font_, int screenW
     textVA->Bind();
 
     if (!fonts.contains(font_))
-    {
-        std::cerr << "Font has not been loaded!\n";
+        LoadFont("C:\\Windows\\Fonts\\" + font_.name + ".ttf", font_.name, font_.size);
+
+    if (!fonts.contains(font_))
         return;
-    }
 
     Font& font = fonts[font_];
 

@@ -12,6 +12,7 @@
 #include <array>
 #include <algorithm>
 #include <atomic>
+#include <format>
 
 // OpenGL includes
 #include "VertexBuffer.h"
@@ -81,6 +82,7 @@ protected:
 	void DrawGrid();
 	void DrawGridlines(double spacing, float opacity);
 	std::pair<int, int> RoundMajorGridValue(double val);
+	void DrawAxisText(std::pair<int, int> spacingSF);
 	void DrawSeeds(const std::shared_ptr<Seeds>& seeds);
 	void DrawMesh(const std::shared_ptr<Mesh>& mesh);
 
