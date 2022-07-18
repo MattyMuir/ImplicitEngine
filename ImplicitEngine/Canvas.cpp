@@ -148,7 +148,7 @@ void Canvas::Resized(wxSizeEvent& evt)
 void Canvas::OnScroll(wxMouseEvent& evt)
 {
     // Zoom
-    double factor = 1.1;
+    double factor = 1.5;
     if (evt.GetWheelRotation() < 0) { factor = 1.0 / factor; }
 
     double mouseX = evt.GetX();
@@ -314,16 +314,32 @@ void Canvas::DrawAxisText(std::pair<int, int> spacingSF)
     float xmaxS = bounds.xmax * relXScale / w - xOffset;
     float ymaxS = bounds.ymax * relYScale / h - yOffset;
 
+    // y-axis text
     double startY = ceil(bounds.ymin / spacing) * spacing;
     int num = bounds.h() / spacing;
-
-    float screenX = (1 - xOffset) / 2 * w + 2;
+    float screenX = (1 - xOffset) / 2 * w + 4;
+    screenX = std::max(screenX, 4.0f);
+    screenX = std::min(screenX, w - 30.0f);
     for (int yi = 0; yi <= num; yi++)
     {
         double worldY = startY + spacing * yi;
         float screenY = (worldY * relYScale / h - yOffset + 1) / 2 * h;
 
-        textRenderer->RenderText(std::format("-", worldY), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
+        textRenderer->RenderText(std::format("{:.10}", worldY), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
+    }
+
+    // x-axis text
+    double startX = ceil(bounds.xmin / spacing) * spacing;
+    num = bounds.w() / spacing;
+    float screenY = (1 - yOffset) / 2 * h + 4;
+    screenY = std::max(screenY, 4.0f);
+    screenY = std::min(screenY, h - 30.0f);
+    for (int xi = 0; xi <= num; xi++)
+    {
+        double worldX = startX + spacing * xi;
+        float screenX = (worldX * relXScale / w - xOffset + 1) / 2 * w;
+
+        textRenderer->RenderText(std::format("{:.10}", worldX), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
     }
 }
 
