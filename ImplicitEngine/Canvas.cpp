@@ -8,15 +8,21 @@ wxBEGIN_EVENT_TABLE(Canvas, wxPanel)
     EVT_MOTION(Canvas::OnMouseMove)
 wxEND_EVENT_TABLE()
 
-Canvas::Canvas(wxWindow* parent, int* attribs)
-    : wxGLCanvas(parent, wxID_ANY, attribs)
+Canvas::Canvas(wxWindow* parent, const wxGLAttributes& attribs)
+    : wxGLCanvas(parent, attribs)
 {
 	SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 	mainPtr = (Main*)parent;
 
     // === GL Initialization ===
     wxGLContextAttrs ctxAttrs;
-    ctxAttrs.CoreProfile().OGLVersion(4, 6).Robust().ResetIsolation().EndList();
+    ctxAttrs.PlatformDefaults().OGLVersion(4, 6).ResetIsolation();
+#ifdef _DEBUG
+    ctxAttrs.DebugCtx();
+#else
+    ctxAttrs.Robust();
+#endif
+    ctxAttrs.EndList();
     context = new wxGLContext(this, nullptr, &ctxAttrs);
 
     while (!IsShown()) {};
@@ -31,6 +37,7 @@ Canvas::Canvas(wxWindow* parent, int* attribs)
     }
     wglSwapIntervalEXT(0);
 
+    // Blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -47,8 +54,6 @@ Canvas::Canvas(wxWindow* parent, int* attribs)
 
     // Initialize renderer object
     renderer = new FilteringRenderer([&]() { this->JobProcessingFinished(); });
-
-
 }
 
 Canvas::~Canvas()
@@ -66,7 +71,6 @@ void Canvas::JobProcessingFinished()
 {
     Update();
     Refresh();
-    Update();
 }
 
 void Canvas::DisplaySeeds(bool display)
@@ -89,6 +93,8 @@ void Canvas::OnDraw()
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Drawing code here
+    DrawGrid();
+
     for (auto job : renderer->jobs)
     {
         if (displaySeeds)
@@ -96,7 +102,7 @@ void Canvas::OnDraw()
             // Draw seeds
             auto seeds = renderer->GetSeeds(job->id);
             if (seeds.has_value())
-                DrawSeeds(seeds.value().get());
+                DrawSeeds(seeds.value());
         }
 
         if (displayMeshes)
@@ -104,26 +110,11 @@ void Canvas::OnDraw()
             // Draw filtering meshes
             auto mesh = renderer->GetMesh(job->id);
             if (mesh.has_value())
-                DrawMesh(mesh.value().get());
+                DrawMesh(mesh.value());
         }
-
-        /*std::vector<float> screenVerts;
-        screenVerts.reserve(job->bufferedVerts.size());
-
-        double xScale = relXScale / w;
-        double yScale = relYScale / h;
-        for (int i = 0; i < job->bufferedVerts.size() / 2; i++)
-        {
-            screenVerts.push_back(job->bufferedVerts[i * 2] * xScale - xOffset);
-            screenVerts.push_back(job->bufferedVerts[i * 2 + 1] * yScale - yOffset);
-        }
-
-        vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
-        glDrawArrays(GL_POINTS, 0, screenVerts.size() / 2);*/
     }
 
     SwapBuffers();
-    glFinish();
 }
 
 void Canvas::OnPaint(wxPaintEvent& evt)
@@ -201,7 +192,96 @@ void Canvas::ToScreen(float& xout, float& yout, double x, double y)
     yout = y * relYScale / h - yOffset;
 }
 
-void Canvas::DrawSeeds(Seeds* seeds)
+void Canvas::DrawGrid()
+{
+    float xminS = bounds.xmin * relXScale / w - xOffset;
+    float yminS = bounds.ymin * relYScale / h - yOffset;
+    float xmaxS = bounds.xmax * relXScale / w - xOffset;
+    float ymaxS = bounds.ymax * relYScale / h - yOffset;
+
+    float xzeroS = -xOffset;
+    float yzeroS = -yOffset;
+
+    // === Draw zero axes ===
+    std::array<float, 8> axisBuf = { xminS, yzeroS, xmaxS, yzeroS, xzeroS, yminS, xzeroS, ymaxS };
+    vb->SetData(axisBuf.data(), axisBuf.size() * sizeof(float));
+
+    glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_LINES, 0, 4);
+
+    // === Draw major gridlines ===
+    wxDisplay display(wxDisplay::GetFromWindow(this));
+    wxRect screen = display.GetClientArea();
+
+    double targetMajorSize = std::max(screen.width, screen.height) / 15;
+
+    // Find grid width that achieves target
+    double exactGridW = targetMajorSize / w * bounds.w();
+    auto [mantissa, exponent] = RoundMajorGridValue(exactGridW);
+    double gridW = pow(10, exponent) * mantissa;
+
+    DrawGridlines(gridW, 0.3f);
+
+    // === Draw minor gridlines ===
+    DrawGridlines(gridW / 5, 0.1f);
+}
+
+void Canvas::DrawGridlines(double spacing, float opacity)
+{
+    struct Point { float x, y; };
+
+    float xminS = bounds.xmin * relXScale / w - xOffset;
+    float yminS = bounds.ymin * relYScale / h - yOffset;
+    float xmaxS = bounds.xmax * relXScale / w - xOffset;
+    float ymaxS = bounds.ymax * relYScale / h - yOffset;
+
+    double startY = ceil(bounds.ymin / spacing) * spacing;
+    int num = bounds.h() / spacing;
+
+    std::vector<Point> majorsBuf;
+    for (int yi = 0; yi <= num; yi++)
+    {
+        double worldY = startY + spacing * yi;
+        float screenY = worldY * relYScale / h - yOffset;
+
+        majorsBuf.push_back({ xminS, screenY });
+        majorsBuf.push_back({ xmaxS, screenY });
+    }
+
+    // Vertical lines
+    double startX = ceil(bounds.xmin / spacing) * spacing;
+    num = bounds.w() / spacing;
+
+    for (int xi = 0; xi <= num; xi++)
+    {
+        double worldX = startX + spacing * xi;
+        float screenX = worldX * relXScale / w - xOffset;
+
+        majorsBuf.push_back({ screenX, yminS });
+        majorsBuf.push_back({ screenX, ymaxS });
+    }
+
+    vb->SetData(majorsBuf.data(), majorsBuf.size() * sizeof(Point));
+
+    glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, opacity);
+    glDrawArrays(GL_LINES, 0, majorsBuf.size());
+}
+
+std::pair<int, int> Canvas::RoundMajorGridValue(double val)
+{
+    int exponent = std::floor(std::log(val) / std::log(10));
+
+    double mantissa = val / std::pow(10, exponent);
+
+    if (mantissa > 3.5)
+        return { 5, exponent };
+    else if (mantissa > 1.5)
+        return { 2, exponent };
+    else
+        return { 1, exponent };
+}
+
+void Canvas::DrawSeeds(const std::shared_ptr<Seeds>& seeds)
 {
     std::vector<float> screenSeeds;
     
@@ -229,12 +309,9 @@ void Canvas::DrawSeeds(Seeds* seeds)
     glDrawArrays(GL_POINTS, 0, num);
 }
 
-void Canvas::DrawMesh(Mesh* mesh)
+void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
 {
-    struct Point
-    {
-        float x, y;
-    };
+    struct Point { float x, y; };
 
     int dim = mesh->dim;
     std::vector<Point> verts;

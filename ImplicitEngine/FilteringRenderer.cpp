@@ -104,7 +104,6 @@ void FilteringRenderer::ProcessJob(Job* job)
 		else
 			jobSeeds[job->id] = std::make_shared<Seeds>(seeds);
 	}
-		
 
 	// ===== Mesh Generation =====
 	TIMER(mesh);
@@ -154,12 +153,4 @@ void FilteringRenderer::ProcessJob(Job* job)
 
 	// ===== Data Output =====
 	job->verts.clear();
-	for (const auto& seedVec : seeds)
-	{
-		for (const auto& seed : seedVec)
-		{
-			job->verts.push_back(seed.x);
-			job->verts.push_back(seed.y);
-		}
-	}
 }

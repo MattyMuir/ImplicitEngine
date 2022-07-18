@@ -4,10 +4,12 @@
 #include "glall.h"
 #include "glhelpers.h"
 #include <wx/glcanvas.h>
+#include <wx/display.h>
 
 //STL includes
 #include <string>
 #include <vector>
+#include <array>
 #include <atomic>
 
 // OpenGL includes
@@ -31,7 +33,7 @@ struct MousePosition
 class Canvas : public wxGLCanvas
 {
 public:
-	Canvas(wxWindow* parent, int* attribs);
+	Canvas(wxWindow* parent, const wxGLAttributes& attribs);
 	~Canvas();
 	Main* mainPtr;
 
@@ -70,8 +72,11 @@ protected:
 	void OnMouseDrag(double delX, double delY);
 	void ToScreen(float& xout, float& yout, double x, double y);
 
-	void DrawSeeds(Seeds* seeds);
-	void DrawMesh(Mesh* mesh);
+	void DrawGrid();
+	void DrawGridlines(double spacing, float opacity);
+	std::pair<int, int> RoundMajorGridValue(double val);
+	void DrawSeeds(const std::shared_ptr<Seeds>& seeds);
+	void DrawMesh(const std::shared_ptr<Mesh>& mesh);
 
 	void RecalculateBounds();
 	void UpdateJobs();

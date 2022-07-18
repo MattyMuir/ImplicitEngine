@@ -18,7 +18,7 @@ struct Mesh
 
 	std::vector<uint8_t> boxes;
 	Bounds bounds;
-	int dim;
+	uint64_t dim;
 };
 
 class FilteringRenderer : public Renderer

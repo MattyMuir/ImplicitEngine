@@ -51,16 +51,13 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	equationList->GetListCtrl()->Bind(wxEVT_LIST_END_LABEL_EDIT, &Main::OnEquationEdit, this);
 
 	// Initialize canvas
-	int attribs[] = { WX_GL_SAMPLE_BUFFERS, 1,
-						WX_GL_SAMPLES, antialiasingSamples,
-						WX_GL_CORE_PROFILE,
-						WX_GL_RGBA,
-						WX_GL_DOUBLEBUFFER,
-						0 };
+	wxGLAttributes atts;
+	atts.PlatformDefaults();
+	if (useAntialiasing)
+		atts.SampleBuffers(1).Samplers(antialiasingSamples);
+	atts.EndList();
 
-	int* attribList = attribs;
-	if (!useAntialiasing) attribList += 4;
-	canvas = new Canvas(horizSplitter, attribList);
+	canvas = new Canvas(horizSplitter, atts);
 
 	detailSpinner->SetValue(canvas->renderer->GetFinalMeshRes());
 
