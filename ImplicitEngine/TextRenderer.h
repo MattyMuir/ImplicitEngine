@@ -14,7 +14,8 @@
 
 struct Character
 {
-	unsigned int texID, w, h, bx, by, advance;
+	unsigned int texID;
+	int w, h, bx, by, advance;
 };
 
 struct FontMeta

@@ -323,7 +323,7 @@ void Canvas::DrawAxisText(std::pair<int, int> spacingSF)
         double worldY = startY + spacing * yi;
         float screenY = (worldY * relYScale / h - yOffset + 1) / 2 * h;
 
-        textRenderer->RenderText(std::format("/", worldY), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
+        textRenderer->RenderText(std::format("-", worldY), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
     }
 }
 
