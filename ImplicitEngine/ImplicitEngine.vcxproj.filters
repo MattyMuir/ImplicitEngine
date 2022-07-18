@@ -80,6 +80,9 @@
     <ClInclude Include="pow4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TextRenderer.h">
+      <Filter>OpenGL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -121,9 +124,15 @@
     <ClCompile Include="pow4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextRenderer.cpp">
+      <Filter>OpenGL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="basic.shader">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="text.shader">
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>

@@ -43,7 +43,6 @@ Canvas::Canvas(wxWindow* parent, const wxGLAttributes& attribs)
 
     // === Rendering Setup ===
     shader = new Shader(Shader::Compile("basic.shader"));
-    shader->Bind();
 
     va = new VertexArray;
     vb = new VertexBuffer;
@@ -52,7 +51,14 @@ Canvas::Canvas(wxWindow* parent, const wxGLAttributes& attribs)
     vbl->Push<float>(2);
     va->AddVBuffer(*vb, *vbl);
 
-    // Initialize renderer object
+    // Initialize text renderer
+    textRenderer = new TextRenderer;
+    textRenderer->LoadFont("C:\\Windows\\Fonts\\Arial.ttf", "Arial", 48);
+
+    shader->Bind();
+    va->Bind();
+
+    // Initialize function renderer object
     renderer = new FilteringRenderer([&]() { this->JobProcessingFinished(); });
 }
 
@@ -63,6 +69,7 @@ Canvas::~Canvas()
     delete vbl;
     delete va;
     delete shader;
+    delete textRenderer;
 
     delete renderer;
 }
@@ -142,7 +149,7 @@ void Canvas::Resized(wxSizeEvent& evt)
 void Canvas::OnScroll(wxMouseEvent& evt)
 {
     // Zoom
-    double factor = 1.5;
+    double factor = 1.1;
     if (evt.GetWheelRotation() < 0) { factor = 1.0 / factor; }
 
     double mouseX = evt.GetX();
@@ -203,11 +210,22 @@ void Canvas::DrawGrid()
     float yzeroS = -yOffset;
 
     // === Draw zero axes ===
-    std::array<float, 8> axisBuf = { xminS, yzeroS, xmaxS, yzeroS, xzeroS, yminS, xzeroS, ymaxS };
-    vb->SetData(axisBuf.data(), axisBuf.size() * sizeof(float));
+    //std::array<float, 8> axisBuf = { xminS, yzeroS, xmaxS, yzeroS, xzeroS, yminS, xzeroS, ymaxS };
+
+    float lineW = 2.0 / w;
+    float lineH = 2.0 / h;
+
+    Point p[8] = {     { xminS, yzeroS - lineH }, { xminS, yzeroS + lineH },
+                            { xmaxS, yzeroS - lineH }, { xmaxS, yzeroS + lineH },
+                            { xzeroS - lineW, yminS }, { xzeroS + lineW, yminS },
+                            { xzeroS - lineW, ymaxS }, { xzeroS + lineW, ymaxS } };
+    std::array<Point, 12> axisBuf = { p[0], p[1], p[2], p[1], p[2], p[3],
+        p[4], p[5], p[6], p[5], p[6], p[7] };
+
+    vb->SetData(axisBuf.data(), axisBuf.size() * sizeof(Point));
 
     glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
-    glDrawArrays(GL_LINES, 0, 4);
+    glDrawArrays(GL_TRIANGLES, 0, 12);
 
     // === Draw major gridlines ===
     wxDisplay display(wxDisplay::GetFromWindow(this));
@@ -224,12 +242,15 @@ void Canvas::DrawGrid()
 
     // === Draw minor gridlines ===
     DrawGridlines(gridW / 5, 0.1f);
+
+    // === Draw axis text ===
+    textRenderer->RenderText("Hello", { "Arial", 48 }, w, h, w / 2, h / 2, 1.0f);
+    shader->Bind();
+    va->Bind();
 }
 
 void Canvas::DrawGridlines(double spacing, float opacity)
 {
-    struct Point { float x, y; };
-
     float xminS = bounds.xmin * relXScale / w - xOffset;
     float yminS = bounds.ymin * relYScale / h - yOffset;
     float xmaxS = bounds.xmax * relXScale / w - xOffset;
@@ -270,15 +291,19 @@ void Canvas::DrawGridlines(double spacing, float opacity)
 std::pair<int, int> Canvas::RoundMajorGridValue(double val)
 {
     int exponent = std::floor(std::log(val) / std::log(10));
+    double pow = std::pow(10, exponent);
 
     double mantissa = val / std::pow(10, exponent);
 
-    if (mantissa > 3.5)
-        return { 5, exponent };
-    else if (mantissa > 1.5)
-        return { 2, exponent };
-    else
-        return { 1, exponent };
+    double v[] = { 5 * pow / 10, pow, 2 * pow, 5 * pow, 10 * pow };
+    std::array<double, 5> d;
+    for (int i = 0; i < 5; i++)
+        d[i] = std::abs(val - v[i]);
+
+    int best = std::distance(d.begin(), std::min_element(d.begin(), d.end()));
+
+    std::pair<int, int> options[] = { { 5, exponent - 1 }, { 1, exponent }, { 2, exponent }, { 5, exponent }, { 1, exponent + 1 } };
+    return options[best];
 }
 
 void Canvas::DrawSeeds(const std::shared_ptr<Seeds>& seeds)
@@ -311,8 +336,6 @@ void Canvas::DrawSeeds(const std::shared_ptr<Seeds>& seeds)
 
 void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
 {
-    struct Point { float x, y; };
-
     int dim = mesh->dim;
     std::vector<Point> verts;
 

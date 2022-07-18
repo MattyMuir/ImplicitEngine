@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <algorithm>
 #include <atomic>
 
 // OpenGL includes
@@ -17,6 +18,7 @@
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "TextRenderer.h"
 
 // Custom header files
 #include "FilteringRenderer.h"
@@ -29,6 +31,8 @@ struct MousePosition
 	double x, y;
 	bool valid = false;
 };
+
+struct Point { float x, y; };
 
 class Canvas : public wxGLCanvas
 {
@@ -51,6 +55,8 @@ protected:
 	VertexBufferLayout* vbl;
 	VertexArray* va;
 	Shader* shader;
+	
+	TextRenderer* textRenderer;
 
 	// Renderer
 	FilteringRenderer* renderer;
