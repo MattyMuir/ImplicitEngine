@@ -20,15 +20,16 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	int posNum = 0, negNum = 0;
 
 	// Randomly position seeds, evaluate, and add to vec
+	double expansion = 0.1;
 	Bounds exBounds = bounds;
-	exBounds.xmin -= w * 0.1;
-	exBounds.xmax += w * 0.1;
-	exBounds.ymin -= h * 0.1;
-	exBounds.ymax += h * 0.1;
+	exBounds.xmin -= w * expansion / 2;
+	exBounds.xmax += w * expansion / 2;
+	exBounds.ymin -= h * expansion / 2;
+	exBounds.ymax += h * expansion / 2;
 	for (int i = 0; i < seedNum; i++)
 	{
-		Seed s = { exBounds.xmin + w * 1.2 * (double)rand() / RAND_MAX,
-			exBounds.ymin + h * 1.2 * (double)rand() / RAND_MAX };
+		Seed s = { exBounds.xmin + w * (expansion + 1) * (double)rand() / RAND_MAX,
+			exBounds.ymin + h * (expansion + 1) * (double)rand() / RAND_MAX };
 
 		s.fs = func(s.x, s.y);
 		if (std::isfinite(s.fs))
@@ -135,7 +136,7 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 		bracketedSeeds.push_back({ *s1, s2 });
 	}
 
-	double absTol = std::min(bounds.w(), bounds.h()) / 1000;
+	double absTol = std::min(w, h) / 1000;
 
 	// Perform bracketed refinement
 	for (auto& [s1, s2] : bracketedSeeds)

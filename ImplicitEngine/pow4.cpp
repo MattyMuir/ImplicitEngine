@@ -1,11 +1,11 @@
 #include "pow4.h"
 
-uint64_t Pow2(uint64_t x)
+int64_t Pow2(int64_t x)
 {
-	return ((uint64_t)1 << x);
+	return ((int64_t)1 << x);
 }
 
-uint64_t Pow4(uint64_t x)
+int64_t Pow4(int64_t x)
 {
-	return ((uint64_t)1 << (x << (uint64_t)1));
+	return ((int64_t)1 << (x << (int64_t)1));
 }

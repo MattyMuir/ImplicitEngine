@@ -2,7 +2,7 @@
 
 FilteringRenderer::FilteringRenderer(CallbackFun refreshFun, int seedNum_, int filterMeshRes_, int finalMeshRes_)
 	: Renderer(refreshFun), seedNum(seedNum_), filterMeshRes(filterMeshRes_), finalMeshRes(finalMeshRes_),
-	pool(std::thread::hardware_concurrency() - 1), seeds(pool.get_thread_count()), filterMesh(Pow4(filterMeshRes), false) {}
+	pool(std::thread::hardware_concurrency() - 1), seeds(pool.get_thread_count()), mesh(filterMeshRes) {}
 
 FilteringRenderer::~FilteringRenderer()
 {
@@ -106,51 +106,114 @@ void FilteringRenderer::ProcessJob(Job* job)
 	}
 
 	// ===== Mesh Generation =====
-	TIMER(mesh);
-	filterMesh.resize(Pow4(filterMeshRes));
-	memset(filterMesh.data(), false, filterMesh.size());
+	TIMER(meshConstruct);
+	mesh.boxes.resize(Pow4(filterMeshRes));
+	memset(mesh.boxes.data(), false, mesh.boxes.size());
 
-	const Bounds bounds = job->bounds;
-	size_t filterMeshDim = Pow2(filterMeshRes);
+	mesh.bounds = job->bounds;
+	mesh.dim = Pow2(filterMeshRes);
 
 	// Enable mesh boxes containing or neigbouring seeds
 	for (const auto& seedVec : seeds)
 	{
 		for (const Seed& s : seedVec)
-		{
-			if (!bounds.In(s.x, s.y)) continue;
-
-			int boxXI = (s.x - bounds.xmin) / bounds.w() * filterMeshDim;
-			int boxYI = (s.y - bounds.ymin) / bounds.h() * filterMeshDim;
-
-			filterMesh[boxXI + boxYI * filterMeshDim] = true;
-			boxXI++;
-			if (boxXI < filterMeshDim) filterMesh[boxXI + boxYI * filterMeshDim] = true;
-			boxXI -= 2;
-			if (boxXI >= 0) filterMesh[boxXI + boxYI * filterMeshDim] = true;
-			boxXI++; boxYI++;
-			if (boxYI < filterMeshDim) filterMesh[boxXI + boxYI * filterMeshDim] = true;
-			boxYI -= 2;
-			if (boxYI >= 0) filterMesh[boxXI + boxYI * filterMeshDim] = true;
-		}
+			InsertSeed(s);
 	}
 
-	STOP_LOG(mesh);
+	STOP_LOG(meshConstruct);
 
 	if (keepMesh)
 	{
 		if (jobMeshes.contains(job->id))
 		{
-			Mesh& jobMesh = *jobMeshes[job->id];
-
-			jobMesh.boxes = filterMesh;
-			jobMesh.bounds = bounds;
-			jobMesh.dim = Pow2(filterMeshRes);
+			*jobMeshes[job->id] = mesh;
 		}
 		else
-			jobMeshes[job->id] = std::make_shared<Mesh>(filterMesh, bounds, Pow2(filterMeshRes));
+			jobMeshes[job->id] = std::make_shared<Mesh>(mesh);
 	}
 
 	// ===== Data Output =====
 	job->verts.clear();
+}
+
+void FilteringRenderer::InsertSeed(const Seed& s)
+{
+	int64_t boxXI = floor((s.x - mesh.bounds.xmin) / mesh.bounds.w() * mesh.dim);
+	int64_t boxYI = floor((s.y - mesh.bounds.ymin) / mesh.bounds.h() * mesh.dim);
+
+	bool xFullyIn = (boxXI > 0) && (boxXI < mesh.dim - 1);
+	bool yFullyIn = (boxYI > 0) && (boxYI < mesh.dim - 1);
+
+	if (xFullyIn && yFullyIn) [[likely]]
+	{
+		int64_t index = boxYI * mesh.dim + boxXI;
+		mesh.boxes[index] = true;
+		mesh.boxes[index + 1] = true;
+		mesh.boxes[index - 1] = true;
+		mesh.boxes[index + mesh.dim] = true;
+		mesh.boxes[index - mesh.dim] = true;
+	}
+	else [[unlikely]]
+	{
+		bool fullyOut = (boxXI < -1) || (boxXI > mesh.dim)
+			|| (boxYI < -1) || (boxYI > mesh.dim);
+		
+		if (fullyOut) return;
+
+		// All the edge cases
+		// Self, U, D, R, L
+		bool adj[5] = { true, true, true, true, true };
+		if (boxXI == 0)
+		{
+			adj[4] = false;
+		}
+		else if (boxXI == mesh.dim - 1)
+		{
+			adj[3] = false;
+		}
+		else if (boxXI == -1)
+		{
+			adj[0] = false;
+			adj[1] = false;
+			adj[2] = false;
+			adj[4] = false;
+		}
+		else if (boxXI == mesh.dim)
+		{
+			adj[0] = false;
+			adj[1] = false;
+			adj[2] = false;
+			adj[3] = false;
+		}
+
+		if (boxYI == 0)
+		{
+			adj[2] = false;
+		}
+		else if (boxYI == mesh.dim - 1)
+		{
+			adj[1] = false;
+		}
+		else if (boxYI == -1)
+		{
+			adj[2] = false;
+			adj[3] = false;
+			adj[4] = false;
+			adj[0] = false;
+		}
+		else if (boxYI == mesh.dim)
+		{
+			adj[0] = false;
+			adj[1] = false;
+			adj[3] = false;
+			adj[4] = false;
+		}
+
+		int64_t index = boxYI * mesh.dim + boxXI;
+		if (adj[0]) mesh.boxes[index] = true;
+		if (adj[3]) mesh.boxes[index + 1] = true;
+		if (adj[4]) mesh.boxes[index - 1] = true;
+		if (adj[1]) mesh.boxes[index + mesh.dim] = true;
+		if (adj[2]) mesh.boxes[index - mesh.dim] = true;
+	}
 }

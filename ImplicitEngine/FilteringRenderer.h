@@ -13,12 +13,14 @@ typedef std::vector<std::vector<Seed>> Seeds;
 
 struct Mesh
 {
+	Mesh(int res)
+		: dim(Pow2(res)), boxes(dim* dim) {}
 	Mesh(const std::vector<uint8_t>& boxes_, const Bounds& bounds_, int dim_)
 		: boxes(boxes_), bounds(bounds_), dim(dim_) {}
 
+	int64_t dim;
 	std::vector<uint8_t> boxes;
-	Bounds bounds;
-	uint64_t dim;
+	Bounds bounds = { 0.0, 0.0, 0.0, 0.0 };
 };
 
 class FilteringRenderer : public Renderer
@@ -45,6 +47,7 @@ public:
 protected:
 	void UpdateJobs();
 	void ProcessJob(Job* job);
+	void InsertSeed(const Seed& s);
 
 	ThreadPool pool;
 
@@ -53,7 +56,7 @@ protected:
 	int finalMeshRes;
 
 	Seeds seeds;
-	std::vector<uint8_t> filterMesh;
+	Mesh mesh;
 
 	bool keepSeeds = false;
 	std::map<size_t, std::shared_ptr<Seeds>> jobSeeds;
