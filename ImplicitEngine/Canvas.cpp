@@ -119,7 +119,7 @@ void Canvas::OnDraw()
                 DrawMesh(mesh.value());
         }
 
-        DrawContour(job->verts);
+        DrawContour(job->bufferedVerts);
     }
 
     SwapBuffers();

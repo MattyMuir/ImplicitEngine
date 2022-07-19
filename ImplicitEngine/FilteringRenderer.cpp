@@ -2,7 +2,7 @@
 
 FilteringRenderer::FilteringRenderer(CallbackFun refreshFun, int seedNum_, int filterMeshRes_, int finalMeshRes_)
 	: Renderer(refreshFun), seedNum(seedNum_), filterMeshRes(filterMeshRes_), finalMeshRes(finalMeshRes_),
-	pool(1), seeds(pool.get_thread_count()), mesh(filterMeshRes) {}
+	pool(std::thread::hardware_concurrency() - 1), seeds(pool.get_thread_count()), mesh(filterMeshRes) {}
 
 FilteringRenderer::~FilteringRenderer()
 {
@@ -340,11 +340,11 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 	Bounds& bounds = mesh.bounds;
 
 	buf.SetActive(false);
-	int64_t finalDim = 1 << finalMeshRes;
+	int64_t finalDim = (int64_t)1 << finalMeshRes;
 	int sqsPerTile = (int)(finalDim / mesh.dim);
 	double worldY = (double)(finalDim - y) / finalDim * bounds.h() + bounds.ymin;
 
-	double delX = bounds.w() / finalMeshRes;
+	double delX = bounds.w() / finalDim;
 
 	if (y == 0)  // Top row
 	{
