@@ -85,30 +85,53 @@ void Main::OnMenuExit(wxCommandEvent& evt)
 
 void Main::OnGearPressed(wxCommandEvent& evt)
 {
-	wxDialog* dialog = new wxDialog(this, wxID_ANY, "Advanced Render Settings", wxDefaultPosition, wxSize(225, 135));
+	wxDialog* dialog = new wxDialog(this, wxID_ANY, "Advanced Render Settings", wxDefaultPosition, wxSize(300, 135));
 	wxPanel* dialogPanel = new wxPanel(dialog);
 	dialogPanel->SetFocus();
 
+	// Spinners
+	wxSpinCtrl* seedNumSpinner, * prefResSpinner, * finalResSpinner;
+
 	wxStaticText* seedNumLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Seeds", wxPoint(10, 8));
-	wxSpinCtrl* seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(60, 25),
-		wxALIGN_LEFT | wxSP_ARROW_KEYS, 256, 131072, canvas->renderer->GetSeedNum());
+	seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(60, 25),
+		wxALIGN_LEFT | wxSP_ARROW_KEYS, 32, 131072, canvas->renderer->GetSeedNum());
 
 	seedNumSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetSeedNum(evt.GetValue()); });
 
 	wxStaticText* prefResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Resolution", wxPoint(10, 38));
-	wxSpinCtrl* prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(60, 25),
+	prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(60, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, 2, 8, canvas->renderer->GetFilterMeshRes());
 
-	prefResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetFilterMeshRes(evt.GetValue()); });
-
 	wxStaticText* finalResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Final Mesh Resolution", wxPoint(10, 68));
-	wxSpinCtrl* finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(60, 25),
-		wxALIGN_LEFT | wxSP_ARROW_KEYS, 3, 12, canvas->renderer->GetFinalMeshRes());
+	finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(60, 25),
+		wxALIGN_LEFT | wxSP_ARROW_KEYS, canvas->renderer->GetFilterMeshRes(), 12, canvas->renderer->GetFinalMeshRes());
+
+	prefResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt)
+		{
+			canvas->renderer->SetFilterMeshRes(evt.GetValue());
+			finalResSpinner->SetMin(evt.GetValue());
+		});
 
 	finalResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt)
 		{
 			canvas->renderer->SetFinalMeshRes(evt.GetValue());
 			detailSpinner->SetValue(evt.GetValue());
+			prefResSpinner->SetMax(evt.GetValue());
+		});
+
+	// Buttons
+	wxButton* autoSeedsBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(210, 5), wxSize(60, 25));
+	autoSeedsBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
+		{
+			seedNumSpinner->SetValue(pow(4, 0.5 + prefResSpinner->GetValue()));
+			canvas->renderer->SetSeedNum(seedNumSpinner->GetValue());
+		});
+
+	wxButton* autoResBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(210, 35), wxSize(60, 25));
+	autoResBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
+		{
+			prefResSpinner->SetValue(log(seedNumSpinner->GetValue()) / log(4));
+			canvas->renderer->SetFilterMeshRes(prefResSpinner->GetValue());
 		});
 
 	dialog->ShowModal();
