@@ -5,7 +5,7 @@ struct ValueBuffer
 {
 	int bufSize = 0;
 	std::vector<double> vals;
-	std::vector<bool> active;
+	std::vector<uint8_t> active;
 
 	ValueBuffer() = delete;
 	ValueBuffer(const ValueBuffer& other) = delete;

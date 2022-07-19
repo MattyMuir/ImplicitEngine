@@ -83,6 +83,8 @@ void FilteringRenderer::ProcessJob(Job* job)
 	TIMER(generation);
 	job->funcs.Resize(pool.get_thread_count());
 
+	Bounds bounds = job->bounds;
+
 	// ===== Seed Generation =====
 	for (auto& vec : seeds)
 		vec.clear();
@@ -90,7 +92,7 @@ void FilteringRenderer::ProcessJob(Job* job)
 	int seedsPerThread = seedNum / pool.get_thread_count();
 	std::vector<std::future<void>> futs;
 	for (int ti = 0; ti < pool.get_thread_count(); ti++)
-		futs.push_back(pool.submit(ProximalBracketingGenerator::Generate, &seeds[ti], job->funcs[ti], job->bounds, 16, filterMeshRes, seedsPerThread));
+		futs.push_back(pool.submit(ProximalBracketingGenerator::Generate, &seeds[ti], job->funcs[ti], bounds, 16, filterMeshRes, seedsPerThread));
 
 	for (auto& fut : futs)
 		fut.wait();
@@ -110,7 +112,7 @@ void FilteringRenderer::ProcessJob(Job* job)
 	mesh.boxes.resize(Pow4(filterMeshRes));
 	memset(mesh.boxes.data(), false, mesh.boxes.size());
 
-	mesh.bounds = job->bounds;
+	mesh.bounds = bounds;
 	mesh.dim = Pow2(filterMeshRes);
 
 	// Enable mesh boxes containing or neigbouring seeds
@@ -220,7 +222,7 @@ void FilteringRenderer::InsertSeed(const Seed& s)
 	}
 }
 
-void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack& funcs)
+void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack& funcs) 
 {
 	// Compute a few useful values
 	int finalDim = 1 << finalMeshRes;
@@ -261,9 +263,9 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 	{
 		std::vector<double>* outPtr = &threadOutputs[ti];
 		Function* funcPtr = funcs[ti];
-		ValueBuffer* top = &boundaries[ti];
-		ValueBuffer* bottom = &boundaries[ti + 1];
-		futs[ti] = pool.submit([=]() { this->ContourRows(outPtr, funcPtr, startRows[ti], endRows[ti], top, bottom); });
+		ValueBuffer* bottom = &boundaries[ti];
+		ValueBuffer* top = &boundaries[ti + 1];
+		futs[ti] = pool.submit([=]() { this->ContourRows(outPtr, funcPtr, startRows[ti], endRows[ti], bottom, top); });
 	}
 
 	for (auto& future : futs) future.wait();
@@ -280,42 +282,42 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 	}
 }
 
-void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* funcPtr, int startRow, int endRow, const ValueBuffer* top, const ValueBuffer* bottom)
+void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* funcPtr, int startRow, int endRow, const ValueBuffer* bottom, const ValueBuffer* top) const
 {
 	int finalDim = 1 << finalMeshRes;
 	int bufSize = finalDim + 1;
 
-	ValueBuffer upBuf(bufSize);
 	ValueBuffer downBuf(bufSize);
+	ValueBuffer upBuf(bufSize);
 
-	Bounds& bounds = mesh.bounds;
+	const Bounds& bounds = mesh.bounds;
 
-	// Fill upBuf with values from param
-	upBuf = *top;
+	// Fill downBuf with values from param
+	downBuf = *bottom;
 
 	for (int gy = startRow + 1; gy <= endRow + 1; gy++)
 	{
-		// Fill downBuf with values
+		// Fill upBuf with values
 		if (gy < endRow + 1)
-			FillBuffer(&downBuf, funcPtr, gy);
+			FillBuffer(&upBuf, funcPtr, gy);
 		else
-			downBuf = *bottom;
+			upBuf = *top;
 
 		// Compare buffers to identify squares with lines
 		for (int gx = 0; gx < finalDim; gx++)
 		{
 			// Check if whole square is valid
-			if (upBuf.active[gx] && upBuf.active[gx + 1] && downBuf.active[gx] && downBuf.active[gx + 1]) {}
+			if (downBuf.active[gx] && downBuf.active[gx + 1] && upBuf.active[gx] && upBuf.active[gx + 1]) {}
 			else { continue; }
 
 			double lx = (double)gx / finalDim * bounds.w()  + bounds.xmin;
 			double rx = (double)(gx + 1) / finalDim * bounds.w() + bounds.xmin;
-			double by = (double)(finalDim - gy) / finalDim * bounds.h() + bounds.ymin;
-			double ty = (double)(finalDim - gy + 1) / finalDim * bounds.h() + bounds.ymin;
+			double ty = (double)gy / finalDim * bounds.h() + bounds.ymin;
+			double by = (double)(gy - 1) / finalDim * bounds.h() + bounds.ymin;
 
 			double xs[4] = { lx, rx, rx, lx };
-			double ys[4] = { by, by, ty, ty };
-			double vals[4] = { downBuf[gx], downBuf[gx + 1], upBuf[gx + 1], upBuf[gx] };
+			double ys[4] = { ty, ty, by, by };
+			double vals[4] = { upBuf[gx], upBuf[gx + 1], downBuf[gx + 1], downBuf[gx] };
 			Lines lines = GetTileLines(xs, ys, vals);
 
 			for (int n = 0; n < lines.n; n++)
@@ -328,25 +330,25 @@ void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* fu
 		}
 
 		// Swap buffers
-		std::swap(upBuf.vals, downBuf.vals);
-		std::swap(upBuf.active, downBuf.active);
+		std::swap(downBuf.vals, upBuf.vals);
+		std::swap(downBuf.active, upBuf.active);
 	}
 }
 
-void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y)
+void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y) const
 {
 	ValueBuffer& buf = *bufPtr;
 	Function& func = *funcPtr;
-	Bounds& bounds = mesh.bounds;
+	const Bounds& bounds = mesh.bounds;
 
 	buf.SetActive(false);
 	int64_t finalDim = (int64_t)1 << finalMeshRes;
 	int sqsPerTile = (int)(finalDim / mesh.dim);
-	double worldY = (double)(finalDim - y) / finalDim * bounds.h() + bounds.ymin;
+	double worldY = (double)y / finalDim * bounds.h() + bounds.ymin;
 
 	double delX = bounds.w() / finalDim;
 
-	if (y == 0)  // Top row
+	if (y == 0)  // top row
 	{
 		bool lastTile = false;
 		bool currentTile;
@@ -372,7 +374,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 		}
 		if (mesh.boxes[mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
 	}
-	else if (y == finalDim) // Bottom row
+	else if (y == finalDim) // bottom row
 	{
 		bool lastTile = false;
 		bool currentTile;
@@ -461,7 +463,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 	}
 }
 
-Lines FilteringRenderer::GetTileLines(double* xs, double* ys, double* vals)
+Lines FilteringRenderer::GetTileLines(double* xs, double* ys, double* vals) const
 {
 	// LUT
 	static constexpr int indicies[16][4] = { {0, 0, 0, 0},{0, 3, 0, 0},
