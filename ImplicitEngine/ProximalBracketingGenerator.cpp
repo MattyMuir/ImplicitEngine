@@ -4,32 +4,30 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 {
 	Function& func = *funcPtr;
 
+	// Initialize random number generation
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_int_distribution<unsigned> dist(0, UINT32_MAX);
-
 	srand(dist(mt));
 
 	double w = bounds.w();
 	double h = bounds.h();
 
-	std::vector<Seed> unBracketedSeeds, tempVec;
+	// Initialize seed lists
+	std::vector<Seed> unBracketedSeeds;
 	std::vector<std::pair<Seed, Seed>> bracketedSeeds;
 	unBracketedSeeds.reserve(seedNum);
 
 	int posNum = 0, negNum = 0;
 
+	double expansion = 1.1;
+	Bounds exBounds = bounds.Expand(expansion);
+
 	// Randomly position seeds, evaluate, and add to vec
-	double expansion = 0.1;
-	Bounds exBounds = bounds;
-	exBounds.xmin -= w * expansion / 2;
-	exBounds.xmax += w * expansion / 2;
-	exBounds.ymin -= h * expansion / 2;
-	exBounds.ymax += h * expansion / 2;
 	for (int i = 0; i < seedNum; i++)
 	{
-		Seed s = { exBounds.xmin + w * (expansion + 1) * (double)rand() / RAND_MAX,
-			exBounds.ymin + h * (expansion + 1) * (double)rand() / RAND_MAX };
+		Seed s = { exBounds.xmin + w * expansion * (double)rand() / RAND_MAX,
+			exBounds.ymin + h * expansion * (double)rand() / RAND_MAX };
 
 		s.fs = func(s.x, s.y);
 		if (std::isfinite(s.fs))
@@ -46,7 +44,7 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	int i = 0;
 	while (std::min(posNum, negNum) < 1 && i < newtIter)
 	{
-		//std::cout << "No sign flips, performing newton\n";
+		// No sign flips, performing newton
 		i++;
 		posNum = 0; negNum = 0;
 
@@ -75,18 +73,12 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	// If no sign changes found, generation failed
 	if (std::min(posNum, negNum) == 0) return;
 
-	// Remove inactive seeds
-	for (Seed& s : unBracketedSeeds)
-	{
-		if (s.active) tempVec.push_back(s);
-	}
-	std::swap(unBracketedSeeds, tempVec);
-
 	// Proximity bracketing
 	// Seperate seeds into pos and neg
 	std::vector<int> seeds1, seeds2;
 	for (int i = 0; i < unBracketedSeeds.size(); i++)
 	{
+		if (!unBracketedSeeds[i].active) continue;
 		if (unBracketedSeeds[i].fs > 0) seeds1.push_back(i);
 		else seeds2.push_back(i);
 	}
@@ -94,6 +86,7 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	// Perform bracketing
 	if (seeds2.size() > seeds1.size()) std::swap(seeds1, seeds2);
 
+	bracketedSeeds.reserve(seeds1.size() + seeds2.size());
 	for (int i = 0; i < seeds1.size(); i++)
 	{
 		Seed& s1 = unBracketedSeeds[seeds1[i]];
@@ -146,10 +139,9 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 		double dx = s2.x - s1.x;
 		double dy = s2.y - s1.y;
 
-		double bracketLength = sqrt(dx * dx + dy * dy);
-
 		auto [at, bt] = boost::math::tools::toms748_solve([&](double t) { return func(s1.x + dx * t, s1.y + dy * t); },
 			0.0, 1.0, s1.fs, s2.fs, StopCondition(s1.x, s1.y, dx, dy, absTol, filterMeshRes, &bounds), maxIter);
+
 		double t = (at + bt) / 2;
 		seeds->push_back({ s1.x + dx * t, s1.y + dy * t });
 	}
@@ -178,6 +170,7 @@ StopCondition::StopCondition(double x0, double y0, double dx, double dy, double 
 bool StopCondition::operator()(double at, double bt)
 {
 	bool withinTol = (abs(at - bt) < relTol);
+	if (withinTol) return true;
 
 	int aBoxXI = boxXScale * at + boxXOffset;
 	int aBoxYI = boxYScale * at + boxYOffset;
@@ -186,7 +179,7 @@ bool StopCondition::operator()(double at, double bt)
 
 	bool sameBox = ((aBoxXI == bBoxXI) && (aBoxYI == bBoxYI));
 
-	return (withinTol || sameBox);
+	return sameBox;
 }
 
 static int sign(double x)
