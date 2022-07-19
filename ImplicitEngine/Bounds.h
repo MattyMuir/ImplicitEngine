@@ -17,8 +17,8 @@ struct Bounds
 		double bw = w();
 		double bh = h();
 		return {	xmin - bw * fac / 2,
-					xmax + bw * fac / 2,
 					ymin - bh * fac / 2,
+					xmax + bw * fac / 2,
 					ymax + bh * fac / 2, };
 	}
 };
