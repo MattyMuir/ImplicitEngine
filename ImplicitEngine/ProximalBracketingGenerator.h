@@ -11,6 +11,8 @@
 #include "Seed.h"
 #include "pow4.h"
 
+constexpr int SMPL_NUM = 10;
+
 class StopCondition
 {
 public:
@@ -31,5 +33,5 @@ public:
 	static void Generate(std::vector<Seed>* seeds, Function* funcPtr, Bounds bounds, int maxEval, int filterMeshRes, int seedNum);
 
 protected:
-	static bool ITPRefine(Seed& a, Seed b, Function* funcPtr, Bounds bounds, int maxIter);
+	static double Distance(const Seed& s1, const Seed& s2);
 };

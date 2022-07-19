@@ -200,31 +200,8 @@ void Canvas::ToScreen(float& xout, float& yout, double x, double y)
 
 void Canvas::DrawGrid()
 {
-    float xminS = bounds.xmin * relXScale / w - xOffset;
-    float yminS = bounds.ymin * relYScale / h - yOffset;
-    float xmaxS = bounds.xmax * relXScale / w - xOffset;
-    float ymaxS = bounds.ymax * relYScale / h - yOffset;
-
-    float xzeroS = -xOffset;
-    float yzeroS = -yOffset;
-
-    // === Draw zero axes ===
-    //std::array<float, 8> axisBuf = { xminS, yzeroS, xmaxS, yzeroS, xzeroS, yminS, xzeroS, ymaxS };
-
-    float lineW = 2.0 / w;
-    float lineH = 2.0 / h;
-
-    Point p[8] = {     { xminS, yzeroS - lineH }, { xminS, yzeroS + lineH },
-                            { xmaxS, yzeroS - lineH }, { xmaxS, yzeroS + lineH },
-                            { xzeroS - lineW, yminS }, { xzeroS + lineW, yminS },
-                            { xzeroS - lineW, ymaxS }, { xzeroS + lineW, ymaxS } };
-    std::array<Point, 12> axisBuf = { p[0], p[1], p[2], p[1], p[2], p[3],
-        p[4], p[5], p[6], p[5], p[6], p[7] };
-
-    vb->SetData(axisBuf.data(), axisBuf.size() * sizeof(Point));
-
-    glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
-    glDrawArrays(GL_TRIANGLES, 0, 12);
+    // === Draw axes ===
+    DrawAxes(2.0f);
 
     // === Draw major gridlines ===
     wxDisplay display(wxDisplay::GetFromWindow(this));
@@ -246,6 +223,32 @@ void Canvas::DrawGrid()
     DrawAxisText({ mantissa, exponent });
     shader->Bind();
     va->Bind();
+}
+
+void Canvas::DrawAxes(float width)
+{
+    float xminS = bounds.xmin * relXScale / w - xOffset;
+    float yminS = bounds.ymin * relYScale / h - yOffset;
+    float xmaxS = bounds.xmax * relXScale / w - xOffset;
+    float ymaxS = bounds.ymax * relYScale / h - yOffset;
+
+    float xzeroS = -xOffset;
+    float yzeroS = -yOffset;
+
+    float lineW = width / w;
+    float lineH = width / h;
+
+    Point p[8] = { { xminS, yzeroS - lineH }, { xminS, yzeroS + lineH },
+                            { xmaxS, yzeroS - lineH }, { xmaxS, yzeroS + lineH },
+                            { xzeroS - lineW, yminS }, { xzeroS + lineW, yminS },
+                            { xzeroS - lineW, ymaxS }, { xzeroS + lineW, ymaxS } };
+    std::array<Point, 12> axisBuf = { p[0], p[1], p[2], p[1], p[2], p[3],
+        p[4], p[5], p[6], p[5], p[6], p[7] };
+
+    vb->SetData(axisBuf.data(), axisBuf.size() * sizeof(Point));
+
+    glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_TRIANGLES, 0, 12);
 }
 
 void Canvas::DrawGridlines(double spacing, float opacity)
@@ -333,10 +336,11 @@ void Canvas::DrawAxisText(std::pair<int, int> spacingSF)
     num = bounds.w() / spacing;
     float screenY = (1 - yOffset) / 2 * h + 4;
     screenY = std::max(screenY, 4.0f);
-    screenY = std::min(screenY, h - 30.0f);
+    screenY = std::min(screenY, h - 10.0f);
     for (int xi = 0; xi <= num; xi++)
     {
         double worldX = startX + spacing * xi;
+        if ((int)ceil(bounds.xmin / spacing) + xi == 0) continue;
         float screenX = (worldX * relXScale / w - xOffset + 1) / 2 * w;
 
         textRenderer->RenderText(std::format("{:.10}", worldX), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);

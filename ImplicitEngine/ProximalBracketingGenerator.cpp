@@ -20,10 +20,15 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	int posNum = 0, negNum = 0;
 
 	// Randomly position seeds, evaluate, and add to vec
+	Bounds exBounds = bounds;
+	exBounds.xmin -= w * 0.1;
+	exBounds.xmax += w * 0.1;
+	exBounds.ymin -= h * 0.1;
+	exBounds.ymax += h * 0.1;
 	for (int i = 0; i < seedNum; i++)
 	{
-		Seed s = { bounds.xmin + w * (double)rand() / RAND_MAX,
-			bounds.ymin + h * (double)rand() / RAND_MAX };
+		Seed s = { exBounds.xmin + w * 1.2 * (double)rand() / RAND_MAX,
+			exBounds.ymin + h * 1.2 * (double)rand() / RAND_MAX };
 
 		s.fs = func(s.x, s.y);
 		if (std::isfinite(s.fs))
@@ -91,15 +96,43 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	for (int i = 0; i < seeds1.size(); i++)
 	{
 		Seed& s1 = unBracketedSeeds[seeds1[i]];
-		Seed& s2 = unBracketedSeeds[seeds2[i % seeds2.size()]];
-		bracketedSeeds.push_back({ s1, s2 });
+		Seed* s2 = &s1; // Set to a the location of s1 to avoid uninitialized warning
+
+		double bestDist = DBL_MAX;
+		for (int si = 0; si < SMPL_NUM; si++)
+		{
+			Seed& s = unBracketedSeeds[seeds2[(i + si) % seeds2.size()]];
+			double dist = Distance(s1, s);
+
+			if (dist < bestDist)
+			{
+				bestDist = dist;
+				s2 = &s;
+			}	
+		}
+
+		bracketedSeeds.push_back({ s1, *s2 });
 	}
 
 	for (int i = 0; i < seeds2.size(); i++)
 	{
 		Seed& s2 = unBracketedSeeds[seeds2[i]];
-		Seed& s1 = unBracketedSeeds[seeds1[(i + 1) % seeds1.size()]];
-		bracketedSeeds.push_back({ s1, s2 });
+		Seed* s1 = &s2; // Set to a the location of s2 to avoid uninitialized warning
+
+		double bestDist = DBL_MAX;
+		for (int si = 0; si < SMPL_NUM; si++)
+		{
+			Seed& s = unBracketedSeeds[seeds1[(i + SMPL_NUM + si) % seeds1.size()]];
+			double dist = Distance(s2, s);
+
+			if (dist < bestDist)
+			{
+				bestDist = dist;
+				s1 = &s;
+			}
+		}
+
+		bracketedSeeds.push_back({ *s1, s2 });
 	}
 
 	double absTol = std::min(bounds.w(), bounds.h()) / 1000;
@@ -119,6 +152,13 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 		double t = (at + bt) / 2;
 		seeds->push_back({ s1.x + dx * t, s1.y + dy * t });
 	}
+}
+
+double ProximalBracketingGenerator::Distance(const Seed& s1, const Seed& s2)
+{
+	double dx = s2.x - s1.x;
+	double dy = s2.y - s1.y;
+	return sqrt(dx * dx + dy * dy);
 }
 
 StopCondition::StopCondition(double x0, double y0, double dx, double dy, double absTol, int filterMeshRes, Bounds* bounds)
@@ -151,86 +191,4 @@ bool StopCondition::operator()(double at, double bt)
 static int sign(double x)
 {
 	return (x > 0) - (x < 0);
-}
-
-bool ProximalBracketingGenerator::ITPRefine(Seed& a, Seed b, Function* funcPtr, Bounds bounds, int maxIter)
-{
-	Function& func = *funcPtr;
-	if (!bounds.In(a.x, a.y) && !bounds.In(b.x, b.y))
-		return false;
-
-	double at = 0, bt = 1;
-
-	if (a.fs * b.fs > 0) return false;
-	if (a.fs > b.fs) std::swap(a, b);
-
-	double absEp = std::min(bounds.w(), bounds.h()) / 100;
-	double ep = absEp / sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
-	static constexpr double k1 = 0.1, k2 = 2, n0 = 1;
-
-	int n12 = std::ceil(log2(0.5 / ep));
-	int nmax = n12 + std::ceil(n0);
-	int j = 0;
-
-	double xitp;
-	while (std::abs(bt - at) > ep && j < maxIter)
-	{
-		// Calculating parameters
-		double x12 = (at + bt) / 2;
-		double r = ep * ((uint64_t)1 << (nmax - j)) - (bt - at) / 2;
-		double delta = k1 * std::pow((bt - at), k2);
-
-		// Interpolation
-		double xf = (b.fs * at - a.fs * bt) / (b.fs - a.fs);
-
-		// Truncation
-		double sigma = sign(x12 - xf);
-		double xt = (delta <= std::abs(x12 - xf)) ? xf + sigma * delta : x12;
-
-		// Projection
-		xitp = (std::abs(xt - x12) <= r) ? xt : x12 - sigma * r;
-
-		if (xitp == at || xitp == bt)
-		{
-			Seed res;
-			res.x = xitp * (b.x - a.x) + a.x;
-			res.y = xitp * (b.y - a.y) + a.y;
-			a = res;
-			goto evaluate;
-		}
-
-		// Updating Interval
-		double zitp = func(xitp * (b.x - a.x) + a.x, xitp * (b.y - a.y) + a.y);
-		if (!std::isfinite(zitp)) return false;
-		if (zitp > 0)
-		{
-			bt = xitp;
-			b.fs = zitp;
-		}
-		else if (zitp < 0)
-		{
-			at = xitp;
-			a.fs = zitp;
-		}
-		else
-		{
-			Seed res;
-			res.x = xitp * (b.x - a.x) + a.x;
-			res.y = xitp * (b.y - a.y) + a.y;
-			a = res;
-			goto evaluate;
-		}
-		j++;
-	}
-	{
-		Seed res;
-		xitp = (at + bt) / 2;
-		res.x = xitp * (b.x - a.x) + a.x;
-		res.y = xitp * (b.y - a.y) + a.y;
-		a = res;
-	}
-
-evaluate:
-	a.fs = 0.0;
-	return true;
 }
