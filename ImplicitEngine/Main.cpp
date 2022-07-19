@@ -85,7 +85,7 @@ void Main::OnMenuExit(wxCommandEvent& evt)
 
 void Main::OnGearPressed(wxCommandEvent& evt)
 {
-	wxDialog* dialog = new wxDialog(this, wxID_ANY, "Advanced Render Settings", wxDefaultPosition, wxSize(300, 135));
+	wxDialog* dialog = new wxDialog(this, wxID_ANY, "Advanced Render Settings", wxDefaultPosition, wxSize(305, 135));
 	wxPanel* dialogPanel = new wxPanel(dialog);
 	dialogPanel->SetFocus();
 
@@ -93,17 +93,17 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	wxSpinCtrl* seedNumSpinner, * prefResSpinner, * finalResSpinner;
 
 	wxStaticText* seedNumLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Seeds", wxPoint(10, 8));
-	seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(60, 25),
+	seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, 32, 131072, canvas->renderer->GetSeedNum());
 
 	seedNumSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetSeedNum(evt.GetValue()); });
 
 	wxStaticText* prefResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Resolution", wxPoint(10, 38));
-	prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(60, 25),
+	prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, 2, 8, canvas->renderer->GetFilterMeshRes());
 
 	wxStaticText* finalResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Final Mesh Resolution", wxPoint(10, 68));
-	finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(60, 25),
+	finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, canvas->renderer->GetFilterMeshRes(), 12, canvas->renderer->GetFinalMeshRes());
 
 	prefResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt)
@@ -120,18 +120,21 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 		});
 
 	// Buttons
-	wxButton* autoSeedsBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(210, 5), wxSize(60, 25));
+	wxButton* autoSeedsBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(215, 5), wxSize(60, 25));
+	autoSeedsBtn->SetToolTip("Automatically decide a number of seeds based on prefiltering resolution");
 	autoSeedsBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
 		{
 			seedNumSpinner->SetValue(pow(4, 0.5 + prefResSpinner->GetValue()));
 			canvas->renderer->SetSeedNum(seedNumSpinner->GetValue());
 		});
 
-	wxButton* autoResBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(210, 35), wxSize(60, 25));
+	wxButton* autoResBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(215, 35), wxSize(60, 25));
+	autoResBtn->SetToolTip("Automatically decide a prefiltering resolution based on the number of seeds");
 	autoResBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
 		{
 			prefResSpinner->SetValue(log(seedNumSpinner->GetValue()) / log(4));
 			canvas->renderer->SetFilterMeshRes(prefResSpinner->GetValue());
+			finalResSpinner->SetMin(prefResSpinner->GetValue());
 		});
 
 	dialog->ShowModal();

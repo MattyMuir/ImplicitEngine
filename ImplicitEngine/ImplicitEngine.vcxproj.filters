@@ -83,6 +83,12 @@
     <ClInclude Include="TextRenderer.h">
       <Filter>OpenGL</Filter>
     </ClInclude>
+    <ClInclude Include="ValueBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Lines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -126,6 +132,9 @@
     </ClCompile>
     <ClCompile Include="TextRenderer.cpp">
       <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="ValueBuffer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

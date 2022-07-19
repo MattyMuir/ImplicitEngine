@@ -7,6 +7,8 @@
 #include "Renderer.h"
 #include "ProximalBracketingGenerator.h"
 #include "pow4.h"
+#include "ValueBuffer.h"
+#include "Lines.h"
 
 typedef BS::thread_pool ThreadPool;
 typedef std::vector<std::vector<Seed>> Seeds;
@@ -48,6 +50,10 @@ protected:
 	void UpdateJobs();
 	void ProcessJob(Job* job);
 	void InsertSeed(const Seed& s);
+	void ContourMesh(std::vector<double>& lineVerts, FunctionPack& funcs);
+	void ContourRows(std::vector<double>* lineVerts, Function* funcPtr, int startRow, int endRow, const ValueBuffer* top, const ValueBuffer* bottom);
+	void FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y);
+	Lines GetTileLines(double* xs, double* ys, double* vals);
 
 	ThreadPool pool;
 

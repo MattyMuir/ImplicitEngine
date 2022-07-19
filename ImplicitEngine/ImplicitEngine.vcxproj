@@ -29,6 +29,7 @@
     <ClInclude Include="glall.h" />
     <ClInclude Include="glhelpers.h" />
     <ClInclude Include="IndexBuffer.h" />
+    <ClInclude Include="Lines.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="pow4.h" />
     <ClInclude Include="ProximalBracketingGenerator.h" />
@@ -37,6 +38,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="TextRenderer.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="ValueBuffer.h" />
     <ClInclude Include="VertexArray.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="VertexBufferLayout.h" />
@@ -54,6 +56,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="TextRenderer.cpp" />
+    <ClCompile Include="ValueBuffer.cpp" />
     <ClCompile Include="VertexArray.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
   </ItemGroup>

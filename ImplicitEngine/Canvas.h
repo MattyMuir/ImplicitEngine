@@ -86,6 +86,7 @@ protected:
 	void DrawAxisText(std::pair<int, int> spacingSF);
 	void DrawSeeds(const std::shared_ptr<Seeds>& seeds);
 	void DrawMesh(const std::shared_ptr<Mesh>& mesh);
+	void DrawContour(const std::vector<double>& verts);
 
 	void RecalculateBounds();
 	void UpdateJobs();

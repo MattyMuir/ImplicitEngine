@@ -118,6 +118,8 @@ void Canvas::OnDraw()
             if (mesh.has_value())
                 DrawMesh(mesh.value());
         }
+
+        DrawContour(job->verts);
     }
 
     SwapBuffers();
@@ -417,6 +419,24 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
     glUniform4f(shader->GetUniformLocation("col"), 1.0f, 0.0f, 0.0f, 0.2f);
     vb->SetData(verts.data(), verts.size() * sizeof(Point));
     glDrawArrays(GL_TRIANGLES, 0, verts.size());
+}
+
+void Canvas::DrawContour(const std::vector<double>& verts)
+{
+    std::vector<float> screenVerts;
+    screenVerts.reserve(verts.size());
+
+    double xScale = relXScale / w;
+    double yScale = relYScale / h;
+    for (int i = 0; i < verts.size(); i += 2)
+    {
+        screenVerts.push_back(verts[i] * xScale - xOffset);
+        screenVerts.push_back(verts[i + 1] * yScale - yOffset);
+    }
+
+    vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
+    glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_LINES, 0, screenVerts.size() / 2);
 }
 
 void Canvas::RecalculateBounds()
