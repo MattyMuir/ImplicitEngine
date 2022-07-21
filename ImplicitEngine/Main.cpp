@@ -92,17 +92,17 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	// Spinners
 	wxSpinCtrl* seedNumSpinner, * prefResSpinner, * finalResSpinner;
 
-	wxStaticText* seedNumLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Seeds", wxPoint(10, 8));
+	new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Seeds", wxPoint(10, 8));
 	seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, 32, 131072, canvas->renderer->GetSeedNum());
 
 	seedNumSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetSeedNum(evt.GetValue()); });
 
-	wxStaticText* prefResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Resolution", wxPoint(10, 38));
+	new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Resolution", wxPoint(10, 38));
 	prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, 2, 8, canvas->renderer->GetFilterMeshRes());
 
-	wxStaticText* finalResLabel = new wxStaticText(dialogPanel, wxID_ANY, "Final Mesh Resolution", wxPoint(10, 68));
+	new wxStaticText(dialogPanel, wxID_ANY, "Final Mesh Resolution", wxPoint(10, 68));
 	finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, canvas->renderer->GetFilterMeshRes(), 12, canvas->renderer->GetFinalMeshRes());
 
@@ -124,7 +124,7 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	autoSeedsBtn->SetToolTip("Automatically decide a number of seeds based on prefiltering resolution");
 	autoSeedsBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
 		{
-			seedNumSpinner->SetValue(pow(4, 0.5 + prefResSpinner->GetValue()));
+			seedNumSpinner->SetValue((int)pow(4, 0.5 + prefResSpinner->GetValue()));
 			canvas->renderer->SetSeedNum(seedNumSpinner->GetValue());
 		});
 
@@ -132,7 +132,7 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	autoResBtn->SetToolTip("Automatically decide a prefiltering resolution based on the number of seeds");
 	autoResBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
 		{
-			prefResSpinner->SetValue(log(seedNumSpinner->GetValue()) / log(4));
+			prefResSpinner->SetValue((int)log(seedNumSpinner->GetValue()) / log(4));
 			canvas->renderer->SetFilterMeshRes(prefResSpinner->GetValue());
 			finalResSpinner->SetMin(prefResSpinner->GetValue());
 		});

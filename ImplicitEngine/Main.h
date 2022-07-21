@@ -1,9 +1,11 @@
 #pragma once
+#pragma warning(push, 1)
 #include <wx/wx.h>
 #include <wx/splitter.h>
 #include <wx/spinctrl.h>
 #include <wx/listctrl.h>
 #include <wx/editlbox.h>
+#pragma warning(pop)
 
 #include <sstream>
 #include <atomic>

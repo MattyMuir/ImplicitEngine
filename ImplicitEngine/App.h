@@ -1,5 +1,7 @@
 #pragma once
-#include "wx/wx.h"
+#pragma warning(push, 1)
+#include <wx/wx.h>
+#pragma warning(pop)
 #include "Main.h"
 
 class App : public wxApp

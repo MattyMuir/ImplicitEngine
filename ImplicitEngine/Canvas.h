@@ -1,10 +1,14 @@
 #pragma once
 // wxWidgets includes
+#pragma warning(push, 1)
 #include <wx/wx.h>
+#pragma warning(pop)
 #include "glall.h"
 #include "glhelpers.h"
+#pragma warning(push, 1)
 #include <wx/glcanvas.h>
 #include <wx/display.h>
+#pragma warning(pop)
 
 //STL includes
 #include <string>

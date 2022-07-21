@@ -7,8 +7,8 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	// Initialize random number generation
 	std::random_device rd;
 	std::mt19937 mt(rd());
-	std::uniform_int_distribution<unsigned> dist(0, UINT32_MAX);
-	srand(dist(mt));
+	std::uniform_int_distribution<unsigned> distribution(0, UINT32_MAX);
+	srand(distribution(mt));
 
 	double w = bounds.w();
 	double h = bounds.h();
@@ -40,12 +40,12 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	}
 
 	// Find oppositely signed points
-	int newtIter = maxEval / 3;
-	int i = 0;
-	while (std::min(posNum, negNum) < 1 && i < newtIter)
+	int maxNewtIter = maxEval / 3;
+	int newtIter = 0;
+	while (std::min(posNum, negNum) < 1 && newtIter < maxNewtIter)
 	{
 		// No sign flips, performing newton
-		i++;
+		newtIter++;
 		posNum = 0; negNum = 0;
 
 		// Newton iteration

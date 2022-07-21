@@ -198,8 +198,8 @@ void Canvas::OnMouseDrag(double delX, double delY)
 
 void Canvas::ToScreen(float& xout, float& yout, double x, double y)
 {
-    xout = x * relXScale / w - xOffset;
-    yout = y * relYScale / h - yOffset;
+    xout = (float)(x * relXScale / w - xOffset);
+    yout = (float)(y * relYScale / h - yOffset);
 }
 
 void Canvas::DrawGrid()
@@ -231,13 +231,12 @@ void Canvas::DrawGrid()
 
 void Canvas::DrawAxes(float width)
 {
-    float xminS = bounds.xmin * relXScale / w - xOffset;
-    float yminS = bounds.ymin * relYScale / h - yOffset;
-    float xmaxS = bounds.xmax * relXScale / w - xOffset;
-    float ymaxS = bounds.ymax * relYScale / h - yOffset;
+    float xminS, yminS, xmaxS, ymaxS;
+    ToScreen(xminS, yminS, bounds.xmin, bounds.ymin);
+    ToScreen(xmaxS, ymaxS, bounds.xmin, bounds.ymin);
 
-    float xzeroS = -xOffset;
-    float yzeroS = -yOffset;
+    float xzeroS = (float)(-xOffset);
+    float yzeroS = (float)(-yOffset);
 
     float lineW = width / w;
     float lineH = width / h;
@@ -257,19 +256,18 @@ void Canvas::DrawAxes(float width)
 
 void Canvas::DrawGridlines(double spacing, float opacity)
 {
-    float xminS = bounds.xmin * relXScale / w - xOffset;
-    float yminS = bounds.ymin * relYScale / h - yOffset;
-    float xmaxS = bounds.xmax * relXScale / w - xOffset;
-    float ymaxS = bounds.ymax * relYScale / h - yOffset;
+    float xminS, yminS, xmaxS, ymaxS;
+    ToScreen(xminS, yminS, bounds.xmin, bounds.ymin);
+    ToScreen(xmaxS, ymaxS, bounds.xmin, bounds.ymin);
 
     double startY = ceil(bounds.ymin / spacing) * spacing;
-    int num = bounds.h() / spacing;
+    int num = (int)floor(bounds.h() / spacing);
 
     std::vector<Point> majorsBuf;
     for (int yi = 0; yi <= num; yi++)
     {
         double worldY = startY + spacing * yi;
-        float screenY = worldY * relYScale / h - yOffset;
+        float screenY = (float)(worldY * relYScale / h - yOffset);
 
         majorsBuf.push_back({ xminS, screenY });
         majorsBuf.push_back({ xmaxS, screenY });
@@ -277,12 +275,12 @@ void Canvas::DrawGridlines(double spacing, float opacity)
 
     // Vertical lines
     double startX = ceil(bounds.xmin / spacing) * spacing;
-    num = bounds.w() / spacing;
+    num = (int)floor(bounds.w() / spacing);
 
     for (int xi = 0; xi <= num; xi++)
     {
         double worldX = startX + spacing * xi;
-        float screenX = worldX * relXScale / w - xOffset;
+        float screenX = (float)(worldX * relXScale / w - xOffset);
 
         majorsBuf.push_back({ screenX, yminS });
         majorsBuf.push_back({ screenX, ymaxS });
@@ -296,17 +294,15 @@ void Canvas::DrawGridlines(double spacing, float opacity)
 
 std::pair<int, int> Canvas::RoundMajorGridValue(double val)
 {
-    int exponent = std::floor(std::log(val) / std::log(10));
+    int exponent = (int)floor(log(val) / log(10));
     double pow = std::pow(10, exponent);
-
-    double mantissa = val / std::pow(10, exponent);
 
     double v[] = { 5 * pow / 10, pow, 2 * pow, 5 * pow, 10 * pow };
     std::array<double, 5> d{};
     for (int i = 0; i < 5; i++)
         d[i] = std::abs(val - v[i]);
 
-    int best = std::distance(d.begin(), std::min_element(d.begin(), d.end()));
+    int best = (int)std::distance(d.begin(), std::min_element(d.begin(), d.end()));
 
     std::pair<int, int> options[] = { { 5, exponent - 1 }, { 1, exponent }, { 2, exponent }, { 5, exponent }, { 1, exponent + 1 } };
     return options[best];
@@ -316,36 +312,33 @@ void Canvas::DrawAxisText(std::pair<int, int> spacingSF)
 {
     double spacing = spacingSF.first * pow(10, spacingSF.second);
 
-    float xminS = bounds.xmin * relXScale / w - xOffset;
-    float yminS = bounds.ymin * relYScale / h - yOffset;
-    float xmaxS = bounds.xmax * relXScale / w - xOffset;
-    float ymaxS = bounds.ymax * relYScale / h - yOffset;
+    float screenX, screenY;
 
     // y-axis text
     double startY = ceil(bounds.ymin / spacing) * spacing;
-    int num = bounds.h() / spacing;
-    float screenX = (1 - xOffset) / 2 * w + 4;
+    int num = (int)floor(bounds.h() / spacing);
+    screenX = (float)((1.0 - xOffset) / 2.0 * w + 4.0);
     screenX = std::max(screenX, 4.0f);
     screenX = std::min(screenX, w - 30.0f);
     for (int yi = 0; yi <= num; yi++)
     {
         double worldY = startY + spacing * yi;
-        float screenY = (worldY * relYScale / h - yOffset + 1) / 2 * h;
+        screenY = (float)((worldY * relYScale / h - yOffset + 1.0) / 2.0 * h);
 
         textRenderer->RenderText(std::format("{:.10}", worldY), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
     }
 
     // x-axis text
     double startX = ceil(bounds.xmin / spacing) * spacing;
-    num = bounds.w() / spacing;
-    float screenY = (1 - yOffset) / 2 * h + 4;
+    num = (int)floor(bounds.w() / spacing);
+    screenY = (float)((1.0 - yOffset) / 2.0 * h + 4.0);
     screenY = std::max(screenY, 4.0f);
     screenY = std::min(screenY, h - 10.0f);
     for (int xi = 0; xi <= num; xi++)
     {
         double worldX = startX + spacing * xi;
         if ((int)ceil(bounds.xmin / spacing) + xi == 0) continue;
-        float screenX = (worldX * relXScale / w - xOffset + 1) / 2 * w;
+        screenX = (float)((worldX * relXScale / w - xOffset + 1.0) / 2.0 * w);
 
         textRenderer->RenderText(std::format("{:.10}", worldX), { "Arial", 48 }, w, h, screenX, screenY, 0.5f);
     }
@@ -369,8 +362,8 @@ void Canvas::DrawSeeds(const std::shared_ptr<Seeds>& seeds)
     {
         for (const Seed& s : seedVec)
         {
-            screenSeeds.push_back(s.x * xScale - xOffset);
-            screenSeeds.push_back(s.y * yScale - yOffset);
+            screenSeeds.push_back((float)(s.x * xScale - xOffset));
+            screenSeeds.push_back((float)(s.y * yScale - yOffset));
         }
     }
 
@@ -387,8 +380,6 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
     double boxW = mesh->bounds.w() / dim;
     double boxH = mesh->bounds.h() / dim;
 
-    double xScale = relXScale / w;
-    double yScale = relYScale / h;
     for (int by = 0; by < dim; by++)
     {
         for (int bx = 0; bx < dim; bx++)
@@ -402,10 +393,9 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
             double y2 = y1 + boxH;
 
             // Transform point to screen coordinates
-            float x1s = x1 * xScale - xOffset;
-            float x2s = x2 * xScale - xOffset;
-            float y1s = y1 * yScale - yOffset;
-            float y2s = y2 * yScale - yOffset;
+            float x1s, y1s, x2s, y2s;
+            ToScreen(x1s, y1s, x1, y1);
+            ToScreen(x2s, y2s, x2, y2);
 
             Point corners[4] = { { x1s, y1s }, { x1s, y2s }, { x2s, y2s }, { x2s, y1s } };
 
@@ -432,8 +422,8 @@ void Canvas::DrawContour(const std::vector<double>& verts)
     double yScale = relYScale / h;
     for (int i = 0; i < verts.size(); i += 2)
     {
-        screenVerts.push_back(verts[i] * xScale - xOffset);
-        screenVerts.push_back(verts[i + 1] * yScale - yOffset);
+        screenVerts.push_back((float)(verts[i] * xScale - xOffset));
+        screenVerts.push_back((float)(verts[i + 1] * yScale - yOffset));
     }
 
     vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));

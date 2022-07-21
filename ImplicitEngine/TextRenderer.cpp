@@ -52,8 +52,6 @@ void TextRenderer::LoadFont(std::string_view path, std::string_view name, unsign
 	// Load all characters
     for (unsigned char c = 0; c <= 128; c++)
     {
-        if (c == '-')
-            int x = 3;
         // Load character glyph 
         if (FT_Load_Char(face, c, FT_LOAD_RENDER))
         {

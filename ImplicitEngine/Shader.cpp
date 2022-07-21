@@ -30,7 +30,7 @@ void Shader::Unbind() const
 unsigned int Shader::GetUniformLocation(const std::string& varName)
 {
     GlCall(int location = glGetUniformLocation(dataID, varName.c_str()));
-    ASSERT(location != -1);
+    assert(location != -1);
     return location;
 }
 
