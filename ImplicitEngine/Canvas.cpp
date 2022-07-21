@@ -233,7 +233,7 @@ void Canvas::DrawAxes(float width)
 {
     float xminS, yminS, xmaxS, ymaxS;
     ToScreen(xminS, yminS, bounds.xmin, bounds.ymin);
-    ToScreen(xmaxS, ymaxS, bounds.xmin, bounds.ymin);
+    ToScreen(xmaxS, ymaxS, bounds.xmax, bounds.ymax);
 
     float xzeroS = (float)(-xOffset);
     float yzeroS = (float)(-yOffset);
@@ -258,7 +258,7 @@ void Canvas::DrawGridlines(double spacing, float opacity)
 {
     float xminS, yminS, xmaxS, ymaxS;
     ToScreen(xminS, yminS, bounds.xmin, bounds.ymin);
-    ToScreen(xmaxS, ymaxS, bounds.xmin, bounds.ymin);
+    ToScreen(xmaxS, ymaxS, bounds.xmax, bounds.ymax);
 
     double startY = ceil(bounds.ymin / spacing) * spacing;
     int num = (int)floor(bounds.h() / spacing);
