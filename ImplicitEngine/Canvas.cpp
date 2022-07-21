@@ -101,7 +101,7 @@ void Canvas::OnDraw()
     // Drawing code here
     DrawGrid();
 
-    for (auto job : renderer->jobs)
+    for (std::shared_ptr<Job> job : renderer->jobs)
     {
         if (displaySeeds)
         {
@@ -211,7 +211,7 @@ void Canvas::DrawGrid()
     wxDisplay display(wxDisplay::GetFromWindow(this));
     wxRect screen = display.GetClientArea();
 
-    double targetMajorSize = std::max(screen.width, screen.height) / 15;
+    double targetMajorSize = std::max(screen.width, screen.height) / 15.0;
 
     // Find grid width that achieves target
     double exactGridW = targetMajorSize / w * bounds.w();
@@ -302,7 +302,7 @@ std::pair<int, int> Canvas::RoundMajorGridValue(double val)
     double mantissa = val / std::pow(10, exponent);
 
     double v[] = { 5 * pow / 10, pow, 2 * pow, 5 * pow, 10 * pow };
-    std::array<double, 5> d;
+    std::array<double, 5> d{};
     for (int i = 0; i < 5; i++)
         d[i] = std::abs(val - v[i]);
 
@@ -454,7 +454,7 @@ void Canvas::RecalculateBounds()
 void Canvas::UpdateJobs()
 {
     RecalculateBounds();
-    for (auto job : renderer->jobs)
+    for (std::shared_ptr<Job> job : renderer->jobs)
     {
         job->bounds = bounds;
         job->status = JobStatus::OUTDATED;

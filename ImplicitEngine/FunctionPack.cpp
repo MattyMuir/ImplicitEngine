@@ -16,7 +16,7 @@ FunctionPack::~FunctionPack()
 
 void FunctionPack::Resize(int size)
 {
-	int dif = size - funcs.size();
+	int dif = size - (int)funcs.size();
 	for (int i = 0; i < dif; i++)
 		funcs.push_back(new Function(funcStr));
 }

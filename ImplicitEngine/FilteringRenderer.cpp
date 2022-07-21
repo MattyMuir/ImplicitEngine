@@ -89,9 +89,10 @@ void FilteringRenderer::ProcessJob(Job* job)
 	for (auto& vec : seeds)
 		vec.clear();
 
-	int seedsPerThread = seedNum / pool.get_thread_count();
+	int threadNum = pool.get_thread_count();
+	int seedsPerThread = seedNum / threadNum;
 	std::vector<std::future<void>> futs;
-	for (int ti = 0; ti < pool.get_thread_count(); ti++)
+	for (int ti = 0; ti < threadNum; ti++)
 		futs.push_back(pool.submit(ProximalBracketingGenerator::Generate, &seeds[ti], job->funcs[ti], bounds, 16, filterMeshRes, seedsPerThread));
 
 	for (auto& fut : futs)
@@ -113,7 +114,7 @@ void FilteringRenderer::ProcessJob(Job* job)
 	memset(mesh.boxes.data(), false, mesh.boxes.size());
 
 	mesh.bounds = bounds;
-	mesh.dim = Pow2(filterMeshRes);
+	mesh.dim = (int)Pow2(filterMeshRes);
 
 	// Enable mesh boxes containing or neigbouring seeds
 	for (const auto& seedVec : seeds)
@@ -142,8 +143,8 @@ void FilteringRenderer::ProcessJob(Job* job)
 
 void FilteringRenderer::InsertSeed(const Seed& s)
 {
-	int64_t boxXI = floor((s.x - mesh.bounds.xmin) / mesh.bounds.w() * mesh.dim);
-	int64_t boxYI = floor((s.y - mesh.bounds.ymin) / mesh.bounds.h() * mesh.dim);
+	int64_t boxXI = (int64_t)floor((s.x - mesh.bounds.xmin) / mesh.bounds.w() * mesh.dim);
+	int64_t boxYI = (int64_t)floor((s.y - mesh.bounds.ymin) / mesh.bounds.h() * mesh.dim);
 
 	bool xFullyIn = (boxXI > 0) && (boxXI < mesh.dim - 1);
 	bool yFullyIn = (boxYI > 0) && (boxYI < mesh.dim - 1);
@@ -271,14 +272,14 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 	for (auto& future : futs) future.wait();
 
 	// Collect outputs into a single vector
-	int finalValueNum = 0;
+	size_t finalValueNum = 0;
 	for (const auto& vec : threadOutputs) finalValueNum += vec.size();
 
 	lineVerts.reserve(finalValueNum);
 	for (int ti = 0; ti < threadNum; ti++)
 	{
-		for (float f : threadOutputs[ti])
-			lineVerts.push_back(f);
+		for (double v : threadOutputs[ti])
+			lineVerts.push_back(v);
 	}
 }
 
@@ -408,7 +409,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 			bool lastTile = false;
 			bool currentTile;
 
-			int rowIndexOffset = (y - 1) / sqsPerTile * mesh.dim;
+			int64_t rowIndexOffset = (y - 1) / sqsPerTile * mesh.dim;
 
 			int majorIndex = 0;
 			for (int majorX = 0; majorX < mesh.dim; majorX++)
@@ -437,7 +438,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 			bool lastTile = false;
 			bool currentTile;
 
-			int rowIndexOffset = y / sqsPerTile * mesh.dim;
+			int64_t rowIndexOffset = y / sqsPerTile * mesh.dim;
 
 			int majorIndex = 0;
 			for (int majorX = 0; majorX < mesh.dim; majorX++)

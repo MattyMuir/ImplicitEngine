@@ -29,7 +29,7 @@ class Main;
 
 struct MousePosition
 {
-	double x, y;
+	double x = 0, y = 0;
 	bool valid = false;
 };
 

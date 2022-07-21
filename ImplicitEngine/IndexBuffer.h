@@ -9,9 +9,9 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
-	inline unsigned int GetCount() const { return count; }
+	inline size_t GetCount() const { return count; }
 
 private:
 	unsigned int dataID;
-	unsigned int count;
+	size_t count;
 };

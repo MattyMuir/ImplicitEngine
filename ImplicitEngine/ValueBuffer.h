@@ -3,18 +3,18 @@
 
 struct ValueBuffer
 {
-	int bufSize = 0;
+	int64_t bufSize = 0;
 	std::vector<double> vals;
 	std::vector<uint8_t> active;
 
 	ValueBuffer() = delete;
 	ValueBuffer(const ValueBuffer& other) = delete;
-	ValueBuffer(ValueBuffer&& other);
+	ValueBuffer(ValueBuffer&& other) noexcept;
 	void operator=(const ValueBuffer& other);
 
 	// Constructor
-	ValueBuffer(int bufSize_);
+	ValueBuffer(int64_t bufSize_);
 
-	double& operator[](int index);
+	double& operator[](int64_t index);
 	void SetActive(bool val);
 };

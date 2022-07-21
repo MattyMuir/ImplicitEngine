@@ -16,11 +16,11 @@ typedef std::vector<std::vector<Seed>> Seeds;
 struct Mesh
 {
 	Mesh(int res)
-		: dim(Pow2(res)), boxes(dim* dim) {}
+		: dim((int)Pow2(res)), boxes((size_t)dim * dim) {}
 	Mesh(const std::vector<uint8_t>& boxes_, const Bounds& bounds_, int dim_)
 		: boxes(boxes_), bounds(bounds_), dim(dim_) {}
 
-	int64_t dim;
+	int dim;
 	std::vector<uint8_t> boxes;
 	Bounds bounds = { 0.0, 0.0, 0.0, 0.0 };
 };

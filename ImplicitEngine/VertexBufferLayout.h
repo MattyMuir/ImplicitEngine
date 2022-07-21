@@ -8,9 +8,9 @@ struct LayoutElement
 	unsigned int count;
 	bool normalized;
 
-	size_t GetElementSize() const
+	unsigned int GetElementSize() const
 	{
-		size_t valSize = 0;
+		unsigned int valSize = 0;
 		switch (type)
 		{
 		case GL_FLOAT:

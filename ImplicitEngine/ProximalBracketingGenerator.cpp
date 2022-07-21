@@ -159,7 +159,7 @@ StopCondition::StopCondition(double x0, double y0, double dx, double dy, double 
 	double bracketLength = sqrt(dx * dx + dy * dy);
 	relTol = absTol / bracketLength;
 
-	double filterMeshDim = Pow2(filterMeshRes);
+	double filterMeshDim = (double)Pow2(filterMeshRes);
 	boxXScale = dx * filterMeshDim / bounds->w();
 	boxXOffset = (x0 - bounds->xmin) * filterMeshDim / bounds->w();
 
@@ -172,10 +172,10 @@ bool StopCondition::operator()(double at, double bt)
 	bool withinTol = (abs(at - bt) < relTol);
 	if (withinTol) return true;
 
-	int aBoxXI = boxXScale * at + boxXOffset;
-	int aBoxYI = boxYScale * at + boxYOffset;
-	int bBoxXI = boxXScale * bt + boxXOffset;
-	int bBoxYI = boxYScale * bt + boxYOffset;
+	int aBoxXI = (int)floor(boxXScale * at + boxXOffset);
+	int aBoxYI = (int)floor(boxYScale * at + boxYOffset);
+	int bBoxXI = (int)floor(boxXScale * bt + boxXOffset);
+	int bBoxYI = (int)floor(boxYScale * bt + boxYOffset);
 
 	bool sameBox = ((aBoxXI == bBoxXI) && (aBoxYI == bBoxYI));
 
