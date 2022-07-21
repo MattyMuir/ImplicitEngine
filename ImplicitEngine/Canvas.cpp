@@ -119,7 +119,9 @@ void Canvas::OnDraw()
                 DrawMesh(mesh.value());
         }
 
+        job->bufferMutex.lock();
         DrawContour(job->bufferedVerts);
+        job->bufferMutex.unlock();
     }
 
     SwapBuffers();

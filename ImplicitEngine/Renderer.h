@@ -25,6 +25,7 @@ struct Job
 	Bounds bounds;
 	FunctionPack funcs;
 	std::vector<double> verts, bufferedVerts;
+	std::mutex bufferMutex;
 	size_t id;
 };
 
