@@ -52,7 +52,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 
 	// Initialize canvas
 	wxGLAttributes atts;
-	atts.PlatformDefaults();
+	atts.PlatformDefaults().RGBA().DoubleBuffer();
 	if (useAntialiasing)
 		atts.SampleBuffers(1).Samplers(antialiasingSamples);
 	atts.EndList();
