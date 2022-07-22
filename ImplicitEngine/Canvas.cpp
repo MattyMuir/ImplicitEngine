@@ -290,7 +290,7 @@ void Canvas::DrawGridlines(double spacing, float opacity)
     vb->SetData(majorsBuf.data(), majorsBuf.size() * sizeof(Point));
 
     glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, opacity);
-    glDrawArrays(GL_LINES, 0, majorsBuf.size());
+    glDrawArrays(GL_LINES, 0, (int)majorsBuf.size());
 }
 
 std::pair<int, int> Canvas::RoundMajorGridValue(double val)
@@ -370,7 +370,7 @@ void Canvas::DrawSeeds(const std::shared_ptr<Seeds>& seeds)
 
     glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
     vb->SetData(screenSeeds.data(), screenSeeds.size() * sizeof(float));
-    glDrawArrays(GL_POINTS, 0, num);
+    glDrawArrays(GL_POINTS, 0, (int)num);
 }
 
 void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
@@ -411,7 +411,7 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
 
     glUniform4f(shader->GetUniformLocation("col"), 1.0f, 0.0f, 0.0f, 0.2f);
     vb->SetData(verts.data(), verts.size() * sizeof(Point));
-    glDrawArrays(GL_TRIANGLES, 0, verts.size());
+    glDrawArrays(GL_TRIANGLES, 0, (int)verts.size());
 }
 
 void Canvas::DrawContour(const std::vector<double>& verts)
@@ -429,7 +429,7 @@ void Canvas::DrawContour(const std::vector<double>& verts)
 
     vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
     glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
-    glDrawArrays(GL_LINES, 0, screenVerts.size() / 2);
+    glDrawArrays(GL_LINES, 0, (int)screenVerts.size() / 2);
 }
 
 void Canvas::RecalculateBounds()

@@ -78,12 +78,12 @@ Main::~Main()
 
 }
 
-void Main::OnMenuExit(wxCommandEvent& evt)
+void Main::OnMenuExit(wxCommandEvent&)
 {
 	Destroy();
 }
 
-void Main::OnGearPressed(wxCommandEvent& evt)
+void Main::OnGearPressed(wxCommandEvent&)
 {
 	wxDialog* dialog = new wxDialog(this, wxID_ANY, "Advanced Render Settings", wxDefaultPosition, wxSize(305, 135));
 	wxPanel* dialogPanel = new wxPanel(dialog);
@@ -122,7 +122,7 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	// Buttons
 	wxButton* autoSeedsBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(215, 5), wxSize(60, 25));
 	autoSeedsBtn->SetToolTip("Automatically decide a number of seeds based on prefiltering resolution");
-	autoSeedsBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
+	autoSeedsBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent&)
 		{
 			seedNumSpinner->SetValue((int)pow(4, 0.5 + prefResSpinner->GetValue()));
 			canvas->renderer->SetSeedNum(seedNumSpinner->GetValue());
@@ -130,9 +130,9 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 
 	wxButton* autoResBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(215, 35), wxSize(60, 25));
 	autoResBtn->SetToolTip("Automatically decide a prefiltering resolution based on the number of seeds");
-	autoResBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent& evt)
+	autoResBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent&)
 		{
-			prefResSpinner->SetValue((int)log(seedNumSpinner->GetValue()) / log(4));
+			prefResSpinner->SetValue((int)floor(log(seedNumSpinner->GetValue()) / log(4)));
 			canvas->renderer->SetFilterMeshRes(prefResSpinner->GetValue());
 			finalResSpinner->SetMin(prefResSpinner->GetValue());
 		});
@@ -140,7 +140,7 @@ void Main::OnGearPressed(wxCommandEvent& evt)
 	dialog->ShowModal();
 }
 
-void Main::OnDisplayStandardOutput(wxCommandEvent& evt)
+void Main::OnDisplayStandardOutput(wxCommandEvent&)
 {
 
 }
