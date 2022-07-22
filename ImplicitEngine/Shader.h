@@ -13,7 +13,8 @@ class Shader
 public:
 	~Shader();
 
-	static Shader Compile(const std::string& filepath);
+	static Shader* CompileFile(const std::string& filepath);
+	static Shader* CompileString(std::string_view shaderStr);
 
 	void Bind() const;
 	void Unbind() const;
@@ -25,7 +26,8 @@ private:
 	unsigned int dataID;
 
 	Shader(unsigned int id);
-	static void SplitShaderFile(const std::string& filepath, std::string& vShader, std::string& fShader);
+	static void SplitShader(const std::string& filepath, std::string& vShader, std::string& fShader);
+	static void SplitShader(std::stringstream& shaderStream, std::string& vShader, std::string& fShader);
 	static unsigned int CompileIndividual(unsigned int shaderType, const std::string& source);
 	static unsigned int LinkShaders(unsigned int vShader, unsigned int fShader);
 };

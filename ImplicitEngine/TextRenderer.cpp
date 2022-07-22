@@ -12,7 +12,8 @@ TextRenderer::TextRenderer()
     textVBL->Push<float>(4);
     textVA->AddVBuffer(*textVB, *textVBL);
 
-    textShader = new Shader(Shader::Compile("text.shader"));
+#include "textshader.h"
+    textShader = Shader::CompileString(textShaderStr);
 
     // Enable blending
     glEnable(GL_BLEND);

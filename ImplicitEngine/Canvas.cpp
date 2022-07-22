@@ -42,7 +42,8 @@ Canvas::Canvas(wxWindow* parent, const wxGLAttributes& attribs)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // === Rendering Setup ===
-    shader = new Shader(Shader::Compile("basic.shader"));
+#include "basicshader.h"
+    shader = Shader::CompileString(basicShader);
 
     va = new VertexArray;
     vb = new VertexBuffer;

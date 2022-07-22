@@ -5,16 +5,30 @@ Shader::~Shader()
     glDeleteProgram(dataID);
 }
 
-Shader Shader::Compile(const std::string& filepath)
+Shader* Shader::CompileFile(const std::string& filepath)
 {
     std::string vShaderSource, fShaderSource;
-    Shader::SplitShaderFile(filepath, vShaderSource, fShaderSource);
+    Shader::SplitShader(filepath, vShaderSource, fShaderSource);
 
     unsigned int vShader, fShader;
     vShader = Shader::CompileIndividual(GL_VERTEX_SHADER, vShaderSource);
     fShader = Shader::CompileIndividual(GL_FRAGMENT_SHADER, fShaderSource);
 
-    return Shader(Shader::LinkShaders(vShader, fShader));
+    return new Shader(Shader::LinkShaders(vShader, fShader));
+}
+
+Shader* Shader::CompileString(std::string_view shaderStr)
+{
+    std::string vShaderSource, fShaderSource;
+    std::stringstream shaderSS;
+    shaderSS << shaderStr;
+    Shader::SplitShader(shaderSS, vShaderSource, fShaderSource);
+
+    unsigned int vShader, fShader;
+    vShader = Shader::CompileIndividual(GL_VERTEX_SHADER, vShaderSource);
+    fShader = Shader::CompileIndividual(GL_FRAGMENT_SHADER, fShaderSource);
+
+    return new Shader(Shader::LinkShaders(vShader, fShader));
 }
 
 void Shader::Bind() const
@@ -35,19 +49,25 @@ unsigned int Shader::GetUniformLocation(const std::string& varName)
 }
 
 Shader::Shader(unsigned int id)
-{
-    dataID = id;
-}
+    : dataID(id) {}
 
-void Shader::SplitShaderFile(const std::string& filepath, std::string& vShader, std::string& fShader)
+void Shader::SplitShader(const std::string& filepath, std::string& vShader, std::string& fShader)
 {
     std::ifstream file(filepath);
+    std::stringstream fileSS;
+    fileSS << file.rdbuf();
+    file.close();
 
+    SplitShader(fileSS, vShader, fShader);
+}
+
+void Shader::SplitShader(std::stringstream& shaderStream, std::string& vShader, std::string& fShader)
+{
     std::stringstream ss[2];
 
     std::string line;
     ShaderType currentlyReading = ShaderType::VERTEX;
-    while (std::getline(file, line))
+    while (std::getline(shaderStream, line, '\n'))
     {
         if (line == "#shader vertex")
             currentlyReading = ShaderType::VERTEX;
@@ -60,8 +80,6 @@ void Shader::SplitShaderFile(const std::string& filepath, std::string& vShader, 
     }
     vShader = ss[0].str();
     fShader = ss[1].str();
-
-    file.close();
 }
 
 unsigned int Shader::CompileIndividual(unsigned int shaderType, const std::string& source)
