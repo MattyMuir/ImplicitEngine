@@ -32,6 +32,8 @@ public:
 
 	~FilteringRenderer();
 
+	void UpdateJobs();
+
 	int GetSeedNum();
 	int GetFilterMeshRes();
 	int GetFinalMeshRes();
@@ -47,7 +49,6 @@ public:
 	std::optional<std::shared_ptr<Mesh>> GetMesh(size_t id);
 
 protected:
-	void UpdateJobs();
 	void ProcessJob(Job* job);
 	void InsertSeed(const Seed& s);
 	void ContourMesh(std::vector<double>& lineVerts, FunctionPack& funcs);

@@ -140,9 +140,9 @@ void Main::OnGearPressed(wxCommandEvent&)
 	dialog->ShowModal();
 }
 
-void Main::OnDisplayStandardOutput(wxCommandEvent&)
+void Main::OnDisplayStandardOutput(wxCommandEvent& evt)
 {
-
+	canvas->DisplayStandard(evt.IsChecked());
 }
 
 void Main::OnDisplaySeeds(wxCommandEvent& evt)

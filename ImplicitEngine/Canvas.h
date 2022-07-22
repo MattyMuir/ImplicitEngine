@@ -48,6 +48,7 @@ public:
 
 	void JobProcessingFinished();
 
+	void DisplayStandard(bool display);
 	void DisplaySeeds(bool display);
 	void DisplayMeshes(bool display);
 
@@ -65,6 +66,7 @@ protected:
 
 	// Renderer
 	FilteringRenderer* renderer;
+	bool displayStandard = true;
 	bool displaySeeds = false;
 	bool displayMeshes = false;
 

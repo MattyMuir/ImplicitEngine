@@ -80,6 +80,12 @@ void Canvas::JobProcessingFinished()
     Refresh();
 }
 
+void Canvas::DisplayStandard(bool display)
+{
+    displayStandard = display;
+    renderer->UpdateJobs();
+}
+
 void Canvas::DisplaySeeds(bool display)
 {
     displaySeeds = display;
@@ -120,9 +126,13 @@ void Canvas::OnDraw()
                 DrawMesh(mesh.value());
         }
 
-        job->bufferMutex.lock();
-        DrawContour(job->bufferedVerts);
-        job->bufferMutex.unlock();
+        if (displayStandard)
+        {
+            // Draw final contour
+            job->bufferMutex.lock();
+            DrawContour(job->bufferedVerts);
+            job->bufferMutex.unlock();
+        }
     }
 
     SwapBuffers();
