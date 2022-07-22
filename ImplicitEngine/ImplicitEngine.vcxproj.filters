@@ -47,9 +47,6 @@
     <ClInclude Include="IndexBuffer.h">
       <Filter>OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="glhelpers.h">
-      <Filter>OpenGL</Filter>
-    </ClInclude>
     <ClInclude Include="glall.h">
       <Filter>OpenGL</Filter>
     </ClInclude>

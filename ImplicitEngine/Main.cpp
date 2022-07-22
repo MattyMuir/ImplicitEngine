@@ -33,7 +33,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	// Top bar
 	topBar = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(0, 35));
 	detailLabel = new wxStaticText(topBar, wxID_ANY, "Plot Detail", wxPoint(10, 10), wxSize(75, 20));
-	detailSpinner = new wxSpinCtrl(topBar, 10001, "", wxPoint(90, 5), wxSize(50, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 3, 12, 5);
+	detailSpinner = new wxSpinCtrl(topBar, 10001, "", wxPoint(90, 5), wxSize(50, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 5, 12, 9);
 
 	detailSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetFinalMeshRes(evt.GetValue()); });
 
@@ -110,6 +110,7 @@ void Main::OnGearPressed(wxCommandEvent&)
 		{
 			canvas->renderer->SetFilterMeshRes(evt.GetValue());
 			finalResSpinner->SetMin(evt.GetValue());
+			detailSpinner->SetMin(evt.GetValue());
 		});
 
 	finalResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt)

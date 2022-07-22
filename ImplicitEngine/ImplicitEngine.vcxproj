@@ -29,7 +29,6 @@
     <ClInclude Include="gearIcon.h" />
     <ClInclude Include="glall.h" />
     <ClInclude Include="glerr.h" />
-    <ClInclude Include="glhelpers.h" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="Lines.h" />
     <ClInclude Include="Main.h" />
