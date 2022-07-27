@@ -32,8 +32,6 @@ public:
 
 	~FilteringRenderer();
 
-	void UpdateJobs();
-
 	int GetSeedNum();
 	int GetFilterMeshRes();
 	int GetFinalMeshRes();

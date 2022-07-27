@@ -24,6 +24,7 @@ protected:
 
 	void OnMenuExit(wxCommandEvent& evt);
 	void OnGearPressed(wxCommandEvent& evt);
+	void OnHomePressed(wxCommandEvent& evt);
 
 	void OnDisplayStandardOutput(wxCommandEvent& evt);
 	void OnDisplaySeeds(wxCommandEvent& evt);
@@ -52,6 +53,8 @@ protected:
 
 	// Main controls
 	wxEditableListBox* equationList = nullptr;
+	wxButton* homeBtn = nullptr;
+
 	std::atomic<size_t> nextEqnID = 15000;
 
 	// Canvas

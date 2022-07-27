@@ -26,7 +26,10 @@
 
 // Custom header files
 #include "FilteringRenderer.h"
+#include "MarchingRenderer.h"
 #include "Timer.h"
+
+typedef FilteringRenderer RendererType;
 
 class Main;
 
@@ -44,6 +47,8 @@ public:
 	Canvas(wxWindow* parent, const wxGLAttributes& attribs);
 	~Canvas();
 	Main* mainPtr;
+
+	void ResetView();
 
 	void JobProcessingFinished();
 
@@ -64,7 +69,7 @@ protected:
 	TextRenderer* textRenderer;
 
 	// Renderer
-	FilteringRenderer* renderer;
+	RendererType* renderer;
 	bool displayStandard = true;
 	bool displaySeeds = false;
 	bool displayMeshes = false;
@@ -91,7 +96,7 @@ protected:
 	void DrawAxisText(std::pair<int, int> spacingSF);
 	void DrawSeeds(const std::shared_ptr<Seeds>& seeds);
 	void DrawMesh(const std::shared_ptr<Mesh>& mesh);
-	void DrawContour(const std::vector<double>& verts);
+	void DrawContour(const std::vector<double>& verts, const wxColour& col);
 
 	void RecalculateBounds();
 	void UpdateJobs();

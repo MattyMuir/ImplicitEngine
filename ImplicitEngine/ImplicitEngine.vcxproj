@@ -32,6 +32,7 @@
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="Lines.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="MarchingRenderer.h" />
     <ClInclude Include="pow4.h" />
     <ClInclude Include="ProximalBracketingGenerator.h" />
     <ClInclude Include="Renderer.h" />
@@ -54,6 +55,7 @@
     <ClCompile Include="glerr.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MarchingRenderer.cpp" />
     <ClCompile Include="pow4.cpp" />
     <ClCompile Include="ProximalBracketingGenerator.cpp" />
     <ClCompile Include="Renderer.cpp" />

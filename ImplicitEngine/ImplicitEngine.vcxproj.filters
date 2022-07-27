@@ -95,6 +95,9 @@
     <ClInclude Include="textshader.h">
       <Filter>Shader Files</Filter>
     </ClInclude>
+    <ClInclude Include="MarchingRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -144,6 +147,9 @@
     </ClCompile>
     <ClCompile Include="glerr.cpp">
       <Filter>OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="MarchingRenderer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

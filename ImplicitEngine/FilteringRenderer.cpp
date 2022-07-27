@@ -72,18 +72,13 @@ std::optional<std::shared_ptr<Mesh>> FilteringRenderer::GetMesh(size_t id)
 		return {};
 }
 
-void FilteringRenderer::UpdateJobs()
-{
-	for (auto job : jobs)
-		job->status = JobStatus::OUTDATED;
-}
-
 void FilteringRenderer::ProcessJob(Job* job)
 {
-	TIMER(generation);
 	job->funcs.Resize(pool.get_thread_count());
 
 	Bounds bounds = job->bounds;
+
+	TIMER(frame);
 
 	// ===== Seed Generation =====
 	for (auto& vec : seeds)
@@ -98,8 +93,6 @@ void FilteringRenderer::ProcessJob(Job* job)
 	for (auto& fut : futs)
 		fut.wait();
 
-	STOP_LOG(generation);
-
 	if (keepSeeds)
 	{
 		if (jobSeeds.contains(job->id))
@@ -109,7 +102,6 @@ void FilteringRenderer::ProcessJob(Job* job)
 	}
 
 	// ===== Mesh Generation =====
-	TIMER(meshConstruct);
 	mesh.boxes.resize(Pow4(filterMeshRes));
 	memset(mesh.boxes.data(), false, mesh.boxes.size());
 
@@ -122,8 +114,6 @@ void FilteringRenderer::ProcessJob(Job* job)
 		for (const Seed& s : seedVec)
 			InsertSeed(s);
 	}
-
-	STOP_LOG(meshConstruct);
 
 	if (keepMesh)
 	{
@@ -139,6 +129,8 @@ void FilteringRenderer::ProcessJob(Job* job)
 	job->verts.clear();
 
 	ContourMesh(job->verts, job->funcs);
+
+	STOP_LOG(frame);
 }
 
 void FilteringRenderer::InsertSeed(const Seed& s)

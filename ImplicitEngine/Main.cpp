@@ -7,6 +7,7 @@ wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	EVT_MENU(30002, Main::OnDisplaySeeds)
 	EVT_MENU(30003, Main::OnDisplayMesh)
 	EVT_BUTTON(10002, Main::OnGearPressed)
+	EVT_BUTTON(10004, Main::OnHomePressed)
 wxEND_EVENT_TABLE()
 
 Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxSize(600, 600))
@@ -41,8 +42,12 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	detailGearButton->SetBitmap(wxImage(25, 25, gearCol, gearAlpha, true));
 	detailGearButton->SetToolTip("Advanced render settings");
 
+	homeBtn = new wxButton(topBar, 10004, "", wxPoint(170, 5), wxSize(25, 25));
+	homeBtn->SetBitmap(wxImage(25, 25, homeCol, homeAlpha, true));
+	homeBtn->SetToolTip("Reset view");
+
 	// Main controls
-	horizSplitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
+	horizSplitter = new wxSplitterWindow(this, 10003, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
 
 	// Initialize editable list
 	equationList = new wxEditableListBox(horizSplitter, 5000, "Equations");
@@ -139,6 +144,12 @@ void Main::OnGearPressed(wxCommandEvent&)
 		});
 
 	dialog->ShowModal();
+}
+
+void Main::OnHomePressed(wxCommandEvent& evt)
+{
+	canvas->ResetView();
+	Refresh();
 }
 
 void Main::OnDisplayStandardOutput(wxCommandEvent& evt)

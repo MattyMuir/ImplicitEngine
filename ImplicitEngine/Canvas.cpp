@@ -59,7 +59,7 @@ Canvas::Canvas(wxWindow* parent, const wxGLAttributes& attribs)
     va->Bind();
 
     // Initialize function renderer object
-    renderer = new FilteringRenderer([&]() { this->JobProcessingFinished(); });
+    renderer = new RendererType([&]() { this->JobProcessingFinished(); });
 }
 
 Canvas::~Canvas()
@@ -72,6 +72,14 @@ Canvas::~Canvas()
     delete textRenderer;
 
     delete renderer;
+}
+
+void Canvas::ResetView()
+{
+    relXScale = 300.0, relYScale = 300.0;
+    xOffset = 0.0, yOffset = 0.0;
+
+    UpdateJobs();
 }
 
 void Canvas::JobProcessingFinished()
@@ -129,8 +137,13 @@ void Canvas::OnDraw()
         if (displayStandard)
         {
             // Draw final contour
+            /*size_t hash = std::hash<size_t>{}(job->id);
+            int hue = hash % 256;
+
+            auto col = wxImage::HSVtoRGB(wxImage::HSVValue(hue / 255.0, 1.0, 1.0));*/
+
             job->bufferMutex.lock();
-            DrawContour(job->bufferedVerts);
+            DrawContour(job->bufferedVerts, { 0, 0, 0 });
             job->bufferMutex.unlock();
         }
     }
@@ -424,7 +437,7 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
     glDrawArrays(GL_TRIANGLES, 0, (int)verts.size());
 }
 
-void Canvas::DrawContour(const std::vector<double>& verts)
+void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
 {
     std::vector<float> screenVerts;
     screenVerts.reserve(verts.size());
@@ -438,7 +451,7 @@ void Canvas::DrawContour(const std::vector<double>& verts)
     }
 
     vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
-    glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, 1.0f);
+    glUniform4f(shader->GetUniformLocation("col"), col.Red() / 255.0f, col.Green() / 255.0f, col.Blue() / 255.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, (int)screenVerts.size() / 2);
 }
 
@@ -456,8 +469,7 @@ void Canvas::UpdateJobs()
 {
     RecalculateBounds();
     for (std::shared_ptr<Job> job : renderer->jobs)
-    {
         job->bounds = bounds;
-        job->status = JobStatus::OUTDATED;
-    }
+
+    renderer->UpdateJobs();
 }

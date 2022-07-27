@@ -86,3 +86,9 @@ void Renderer::DeleteJob(size_t id)
 	deleteList.push_back(id);
 	deleteMutex.unlock();
 }
+
+void Renderer::UpdateJobs()
+{
+	for (std::shared_ptr<Job> job : jobs)
+		job->status = JobStatus::OUTDATED;
+}
