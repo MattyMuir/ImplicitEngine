@@ -24,8 +24,8 @@ void MarchingRenderer::ProcessJob(Job* job)
 	int threadNum = pool.get_thread_count();
 	job->funcs.Resize(threadNum + 1);
 
-	std::vector<int> startRows(threadNum);
-	std::vector<int> endRows(threadNum);
+	std::vector<size_t> startRows(threadNum);
+	std::vector<size_t> endRows(threadNum);
 
 	for (int ti = 0; ti < threadNum; ti++)
 		startRows[ti] = finalMeshDim * ti / threadNum;
@@ -40,7 +40,6 @@ void MarchingRenderer::ProcessJob(Job* job)
 	for (int i = 0; i <= threadNum; i++)
 	{
 		size_t y = (i < threadNum) ? startRows[i] : endRows.back();
-		double worldY = bounds.ymin + (double)y / finalMeshDim * bounds.h();
 
 		auto outPtr = &boundaries[i];
 		auto funcPtr = job->funcs[i];

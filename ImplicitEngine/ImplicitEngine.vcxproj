@@ -26,7 +26,7 @@
     <ClInclude Include="FilteringRenderer.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="FunctionPack.h" />
-    <ClInclude Include="gearIcon.h" />
+    <ClInclude Include="icons.h" />
     <ClInclude Include="glall.h" />
     <ClInclude Include="glerr.h" />
     <ClInclude Include="IndexBuffer.h" />

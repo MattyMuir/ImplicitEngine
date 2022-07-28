@@ -56,7 +56,7 @@
     <ClInclude Include="Bounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gearIcon.h">
+    <ClInclude Include="icons.h">
       <Filter>Icons</Filter>
     </ClInclude>
     <ClInclude Include="FilteringRenderer.h">

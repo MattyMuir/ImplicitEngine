@@ -10,7 +10,7 @@
 #include <sstream>
 #include <atomic>
 
-#include "gearIcon.h"
+#include "icons.h"
 
 class Canvas;
 

@@ -146,7 +146,7 @@ void Main::OnGearPressed(wxCommandEvent&)
 	dialog->ShowModal();
 }
 
-void Main::OnHomePressed(wxCommandEvent& evt)
+void Main::OnHomePressed(wxCommandEvent&)
 {
 	canvas->ResetView();
 	Refresh();
