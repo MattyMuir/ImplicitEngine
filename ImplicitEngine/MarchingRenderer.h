@@ -21,6 +21,9 @@ public:
 
 protected:
 	void ProcessJob(Job* job);
+	void DoProcessJobSingle(Job* job);
+	void DoProcessJobMulti(Job* job);
+
 	void FillBuffer(std::vector<double>* buf, size_t y, const Bounds* boundsPtr, size_t finalMeshDim, Function* funcPtr);
 	void ContourRows(std::vector<double>* verts, size_t startY, size_t endY, const Bounds* boundsPtr, Function* funcPtr, const std::vector<double>* bottom, const std::vector<double>* top);
 	Lines GetTileLines(double* xs, double* ys, double* vals) const;

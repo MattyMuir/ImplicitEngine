@@ -142,9 +142,8 @@ void Canvas::OnDraw()
 
             auto col = wxImage::HSVtoRGB(wxImage::HSVValue(hue / 255.0, 1.0, 1.0));*/
 
-            job->bufferMutex.lock();
+            std::lock_guard lock(job->bufferMutex);
             DrawContour(job->bufferedVerts, { 0, 0, 0 });
-            job->bufferMutex.unlock();
         }
     }
 

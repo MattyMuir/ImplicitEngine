@@ -32,9 +32,9 @@ void Renderer::JobPollLoop()
 				job->status = JobStatus::PROCESSING;
 				ProcessJob(job.get());
 
-				job->bufferMutex.lock();
+				std::unique_lock lock(job->bufferMutex);
 				job->bufferedVerts = job->verts;
-				job->bufferMutex.unlock();
+				lock.unlock();
 
 				if (job->status == JobStatus::PROCESSING)
 					job->status = JobStatus::COMPLETE;
@@ -47,7 +47,7 @@ void Renderer::JobPollLoop()
 
 		if (deleteList.size() > 0)
 		{
-			deleteMutex.lock();
+			std::unique_lock lock(deleteMutex);
 			for (size_t id : deleteList)
 			{
 				auto pos = std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->id == id; });
@@ -55,7 +55,7 @@ void Renderer::JobPollLoop()
 			}
 
 			deleteList.clear();
-			deleteMutex.unlock();
+			lock.unlock();
 
 			refreshCallback();
 		}
@@ -82,9 +82,8 @@ void Renderer::EditJob(size_t id, std::string_view newFunc)
 
 void Renderer::DeleteJob(size_t id)
 {
-	deleteMutex.lock();
+	std::lock_guard(deleteMutex);
 	deleteList.push_back(id);
-	deleteMutex.unlock();
 }
 
 void Renderer::UpdateJobs()

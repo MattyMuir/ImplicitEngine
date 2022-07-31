@@ -15,9 +15,56 @@ int MarchingRenderer::GetFinalMeshRes()
 
 void MarchingRenderer::ProcessJob(Job* job)
 {
-	Bounds bounds = job->bounds;
-
 	TIMER(frame);
+	DoProcessJobSingle(job);
+	STOP_LOG(frame);
+}
+
+void MarchingRenderer::DoProcessJobSingle(Job* job)
+{
+	Bounds bounds = job->bounds;
+	Function& func = *(job->funcs[0]);
+	job->verts.clear();
+
+	size_t finalMeshDim = Pow2(finalMeshRes);
+	double squareW = bounds.w() / finalMeshDim;
+	double squareH = bounds.h() / finalMeshDim;
+	std::vector<double> downBuf(finalMeshDim + 1), upBuf(finalMeshDim + 1);
+
+	for (size_t y = 0; y <= finalMeshDim; y++)
+	{
+		double worldY = bounds.ymin + bounds.h() * y / finalMeshDim;
+		for (size_t x = 0; x <= finalMeshDim; x++)
+		{
+			double worldX = bounds.xmin + bounds.w() * x / finalMeshDim;
+			upBuf[x] = func(worldX, worldY);
+
+			if (x > 1 && y > 1)
+			{
+				double lx = worldX - squareW;
+				double rx = worldX;
+				double ty = worldY;
+				double by = worldY - squareH;
+
+				double xs[4] = { lx, rx, rx, lx };
+				double ys[4] = { ty, ty, by, by };
+				double vals[4] = { upBuf[x - 1], upBuf[x], downBuf[x], downBuf[x - 1] };
+				Lines lines = GetTileLines(xs, ys, vals);
+
+				for (int vi = 0; vi < lines.n * 2; vi++)
+				{
+					job->verts.push_back(lines.xs[vi]);
+					job->verts.push_back(lines.ys[vi]);
+				}
+			}
+		}
+		std::swap(downBuf, upBuf);
+	}
+}
+
+void MarchingRenderer::DoProcessJobMulti(Job* job)
+{
+	Bounds bounds = job->bounds;
 
 	// Calculate which regions of the image to dedicate to each thread
 	size_t finalMeshDim = Pow2(finalMeshRes);
@@ -56,7 +103,7 @@ void MarchingRenderer::ProcessJob(Job* job)
 	for (int ti = 0; ti < threadNum; ti++)
 	{
 		auto outPtr = &blockVerts[ti];
-		auto funcPtr = job->funcs[ti];
+		Function* funcPtr = job->funcs[ti];
 
 		auto bottom = &boundaries[ti];
 		auto top = &boundaries[ti + 1];
@@ -72,12 +119,8 @@ void MarchingRenderer::ProcessJob(Job* job)
 	for (auto& vec : blockVerts)
 	{
 		for (double val : vec)
-		{
 			job->verts.push_back(val);
-		}
 	}
-
-	STOP_LOG(frame);
 }
 
 void MarchingRenderer::FillBuffer(std::vector<double>* buf, size_t y, const Bounds* boundsPtr, size_t finalMeshDim, Function* funcPtr)
