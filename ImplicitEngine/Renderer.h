@@ -5,6 +5,7 @@
 #include <functional>
 #include <thread>
 #include <mutex>
+#include <barrier>
 
 #include "Bounds.h"
 #include "Timer.h"
@@ -40,11 +41,13 @@ public:
 	void EditJob(size_t id, std::string_view newFunc);
 	void DeleteJob(size_t id);
 	void UpdateJobs();
+	void SignalJobRescan();
 
 protected:
 	virtual void ProcessJob(Job* job) = 0;
 
 	std::list<std::shared_ptr<Job>> jobs;
+	std::barrier<> pollingBar;
 	std::mutex deleteMutex;
 	std::list<size_t> deleteList;
 	CallbackFun refreshCallback;

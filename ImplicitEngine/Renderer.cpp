@@ -1,13 +1,14 @@
 #include "Renderer.h"
 
 Renderer::Renderer(CallbackFun refreshCallback_)
-	: refreshCallback(refreshCallback_),
+	: refreshCallback(refreshCallback_), pollingBar(2),
 	jobPollThread(&Renderer::JobPollLoop, std::ref(*this))
 {}
 
 Renderer::~Renderer()
 {
 	active = false;
+	pollingBar.arrive();
 	jobPollThread.join();
 }
 
@@ -16,6 +17,12 @@ void Renderer::JobPollLoop()
 	bool allComplete = false;
 	while (active)
 	{
+		if (allComplete)
+		{
+			// Spin idly until signalled to re-check
+			pollingBar.arrive_and_wait();
+		}
+
 		bool outdatedJobs = false;
 
 		// Lock-free, thread-safe loop over jobs
@@ -71,6 +78,7 @@ void Renderer::JobPollLoop()
 void Renderer::NewJob(std::string_view funcStr, const Bounds& bounds, size_t id)
 {
 	jobs.push_back(std::make_shared<Job>(funcStr, bounds, id));
+	SignalJobRescan();
 }
 
 void Renderer::EditJob(size_t id, std::string_view newFunc)
@@ -82,7 +90,7 @@ void Renderer::EditJob(size_t id, std::string_view newFunc)
 
 void Renderer::DeleteJob(size_t id)
 {
-	std::lock_guard(deleteMutex);
+	std::lock_guard lock(deleteMutex);
 	deleteList.push_back(id);
 }
 
@@ -90,4 +98,11 @@ void Renderer::UpdateJobs()
 {
 	for (std::shared_ptr<Job> job : jobs)
 		job->status = JobStatus::OUTDATED;
+
+	SignalJobRescan();
+}
+
+void Renderer::SignalJobRescan()
+{
+	pollingBar.arrive();
 }
