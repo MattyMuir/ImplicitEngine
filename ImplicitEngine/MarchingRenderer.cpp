@@ -90,7 +90,7 @@ void MarchingRenderer::DoProcessJobMulti(Job* job)
 
 		auto outPtr = &boundaries[i];
 		auto funcPtr = job->funcs[i];
-		futs.push_back(pool.submit([=]() { FillBuffer(outPtr, y, &bounds, finalMeshDim, funcPtr); }));
+		futs.push_back(pool.submit([=, this]() { this->FillBuffer(outPtr, y, &bounds, finalMeshDim, funcPtr); }));
 	}
 
 	for (auto& fut : futs)
@@ -107,7 +107,7 @@ void MarchingRenderer::DoProcessJobMulti(Job* job)
 
 		auto bottom = &boundaries[ti];
 		auto top = &boundaries[ti + 1];
-		futs.push_back(pool.submit([=]() { ContourRows(outPtr, startRows[ti], endRows[ti], &bounds, funcPtr, bottom, top); }));
+		futs.push_back(pool.submit([=, this]() { this->ContourRows(outPtr, startRows[ti], endRows[ti], &bounds, funcPtr, bottom, top); }));
 	}
 
 	for (auto& fut : futs)

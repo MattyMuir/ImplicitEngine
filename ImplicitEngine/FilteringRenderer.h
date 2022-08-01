@@ -50,8 +50,8 @@ protected:
 	void ProcessJob(Job* job);
 	void InsertSeed(const Seed& s);
 	void ContourMesh(std::vector<double>& lineVerts, FunctionPack& funcs);
-	void ContourRows(std::vector<double>* lineVerts, Function* funcPtr, int startRow, int endRow, const ValueBuffer* top, const ValueBuffer* bottom) const;
-	void FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y) const;
+	void ContourRows(std::vector<double>* lineVerts, Function* funcPtr, uint64_t startRow, uint64_t endRow, const ValueBuffer* top, const ValueBuffer* bottom) const;
+	void FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, uint64_t y) const;
 	Lines GetTileLines(double* xs, double* ys, double* vals) const;
 
 	ThreadPool pool;

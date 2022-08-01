@@ -218,15 +218,15 @@ void FilteringRenderer::InsertSeed(const Seed& s)
 void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack& funcs) 
 {
 	// Compute a few useful values
-	int finalDim = 1 << finalMeshRes;
-	int bufSize = finalDim + 1;
+	uint64_t finalDim = (uint64_t)1 << finalMeshRes;
+	uint64_t bufSize = finalDim + 1;
 
 	// Calculate which regions of the image to dedicate to each thread
 	int threadNum = pool.get_thread_count();
 	funcs.Resize(threadNum + 2);
 
-	std::vector<int> startRows(threadNum);
-	std::vector<int> endRows(threadNum);
+	std::vector<uint64_t> startRows(threadNum);
+	std::vector<uint64_t> endRows(threadNum);
 
 	for (int ti = 0; ti < threadNum; ti++)
 		startRows[ti] = finalDim * ti / threadNum;
@@ -243,10 +243,10 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 	std::vector<std::future<void>> futs;
 	for (int ti = 0; ti <= threadNum; ti++)
 	{
-		int gy = (ti < threadNum) ? startRows[ti] : endRows[threadNum - 1] + 1;
+		uint64_t gy = (ti < threadNum) ? startRows[ti] : endRows[threadNum - 1] + 1;
 		ValueBuffer* outPtr = &boundaries[ti];
 		Function* funcPtr = funcs[ti];
-		futs.push_back(pool.submit([=]() { this->FillBuffer(outPtr, funcPtr, gy); }));
+		futs.push_back(pool.submit([=, this]() { this->FillBuffer(outPtr, funcPtr, gy); }));
 	}
 	for (auto& future : futs) future.wait();
 
@@ -258,13 +258,13 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 		Function* funcPtr = funcs[ti];
 		ValueBuffer* bottom = &boundaries[ti];
 		ValueBuffer* top = &boundaries[ti + 1];
-		futs[ti] = pool.submit([=]() { this->ContourRows(outPtr, funcPtr, startRows[ti], endRows[ti], bottom, top); });
+		futs[ti] = pool.submit([=, this]() { this->ContourRows(outPtr, funcPtr, startRows[ti], endRows[ti], bottom, top); });
 	}
 
 	for (auto& future : futs) future.wait();
 
 	// Collect outputs into a single vector
-	size_t finalValueNum = 0;
+	uint64_t finalValueNum = 0;
 	for (const auto& vec : threadOutputs) finalValueNum += vec.size();
 
 	lineVerts.reserve(finalValueNum);
@@ -275,10 +275,10 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 	}
 }
 
-void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* funcPtr, int startRow, int endRow, const ValueBuffer* bottom, const ValueBuffer* top) const
+void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* funcPtr, uint64_t startRow, uint64_t endRow, const ValueBuffer* bottom, const ValueBuffer* top) const
 {
-	int finalDim = 1 << finalMeshRes;
-	int bufSize = finalDim + 1;
+	uint64_t finalDim = (uint64_t)1 << finalMeshRes;
+	uint64_t bufSize = finalDim + 1;
 
 	ValueBuffer downBuf(bufSize);
 	ValueBuffer upBuf(bufSize);
@@ -288,7 +288,7 @@ void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* fu
 	// Fill downBuf with values from param
 	downBuf = *bottom;
 
-	for (int gy = startRow + 1; gy <= endRow + 1; gy++)
+	for (uint64_t gy = startRow + 1; gy <= endRow + 1; gy++)
 	{
 		// Fill upBuf with values
 		if (gy < endRow + 1)
@@ -297,7 +297,7 @@ void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* fu
 			upBuf = *top;
 
 		// Compare buffers to identify squares with lines
-		for (int gx = 0; gx < finalDim; gx++)
+		for (uint64_t gx = 0; gx < finalDim; gx++)
 		{
 			// Check if whole square is valid
 			if (downBuf.active[gx] && downBuf.active[gx + 1] && upBuf.active[gx] && upBuf.active[gx + 1]) {}
@@ -328,7 +328,7 @@ void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* fu
 	}
 }
 
-void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y) const
+void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, uint64_t y) const
 {
 	ValueBuffer& buf = *bufPtr;
 	Function& func = *funcPtr;
@@ -346,7 +346,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 		bool lastTile = false;
 		bool currentTile;
 
-		int majorIndex = 0;
+		uint64_t majorIndex = 0;
 		for (int majorX = 0; majorX < mesh.dim; majorX++)
 		{
 			currentTile = mesh.boxes[majorX];
@@ -358,7 +358,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 				for (int minorX = 1; minorX < sqsPerTile; minorX++)
 				{
 					worldX += delX;
-					int bufIndex = majorIndex + minorX;
+					uint64_t bufIndex = majorIndex + minorX;
 					buf[bufIndex] = func(worldX, worldY);
 				}
 			}
@@ -367,12 +367,12 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 		}
 		if (mesh.boxes[mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
 	}
-	else if (y == finalDim) // bottom row
+	else if ((int64_t)y == finalDim) // bottom row
 	{
 		bool lastTile = false;
 		bool currentTile;
 
-		int majorIndex = 0;
+		uint64_t majorIndex = 0;
 		for (int majorX = 0; majorX < mesh.dim; majorX++)
 		{
 			currentTile = mesh.boxes[(mesh.dim - 1) * mesh.dim + majorX];
@@ -384,7 +384,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 				for (int minorX = 1; minorX < sqsPerTile; minorX++)
 				{
 					worldX += delX;
-					int bufIndex = majorIndex + minorX;
+					uint64_t bufIndex = majorIndex + minorX;
 					buf[bufIndex] = func(worldX, worldY);
 				}
 			}
@@ -403,7 +403,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 
 			int64_t rowIndexOffset = (y - 1) / sqsPerTile * mesh.dim;
 
-			int majorIndex = 0;
+			uint64_t majorIndex = 0;
 			for (int majorX = 0; majorX < mesh.dim; majorX++)
 			{
 				currentTile = mesh.boxes[rowIndexOffset + majorX] || mesh.boxes[rowIndexOffset + mesh.dim + majorX];
@@ -415,7 +415,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 					for (int minorX = 1; minorX < sqsPerTile; minorX++)
 					{
 						worldX += delX;
-						int bufIndex = majorIndex + minorX;
+						uint64_t bufIndex = majorIndex + minorX;
 						buf[bufIndex] = func(worldX, worldY);
 					}
 				}
@@ -432,7 +432,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 
 			int64_t rowIndexOffset = y / sqsPerTile * mesh.dim;
 
-			int majorIndex = 0;
+			uint64_t majorIndex = 0;
 			for (int majorX = 0; majorX < mesh.dim; majorX++)
 			{
 				currentTile = mesh.boxes[rowIndexOffset + majorX];
@@ -444,7 +444,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, int y
 					for (int minorX = 1; minorX < sqsPerTile; minorX++)
 					{
 						worldX += delX;
-						int bufIndex = majorIndex + minorX;
+						uint64_t bufIndex = majorIndex + minorX;
 						buf[bufIndex] = func(worldX, worldY);
 					}
 				}
