@@ -88,12 +88,16 @@ void Renderer::EditJob(size_t id, std::string_view newFunc)
 	std::shared_ptr<Job> job = *std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->id == id; });
 	job->funcs.Change(newFunc);
 	job->status = JobStatus::OUTDATED;
+
+	SignalJobRescan();
 }
 
 void Renderer::DeleteJob(size_t id)
 {
 	std::lock_guard lock(deleteMutex);
 	deleteList.push_back(id);
+
+	SignalJobRescan();
 }
 
 void Renderer::UpdateJobs()
