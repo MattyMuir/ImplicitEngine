@@ -36,7 +36,7 @@ public:
 	Renderer(CallbackFun refreshCallback_);
 	~Renderer();
 
-	void JobPollLoop(std::stop_token token);
+	void JobPollLoop();
 	void NewJob(std::string_view funcStr, const Bounds& bounds, size_t id);
 	void EditJob(size_t id, std::string_view newFunc);
 	void DeleteJob(size_t id);
