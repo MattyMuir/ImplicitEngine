@@ -2,25 +2,27 @@
 
 Renderer::Renderer(CallbackFun refreshCallback_)
 	: refreshCallback(refreshCallback_), pollingBar(2),
-	jobPollThread(&Renderer::JobPollLoop, std::ref(*this))
+	jobPollThread(&Renderer::JobPollLoop, this, std::stop_token{})
 {}
 
 Renderer::~Renderer()
 {
-	active = false;
-	pollingBar.arrive();
+	jobPollThread.request_stop();
+	SignalJobRescan(); // Allow the poller to break from idle
 	jobPollThread.join();
 }
 
-void Renderer::JobPollLoop()
+void Renderer::JobPollLoop(std::stop_token token)
 {
 	bool allComplete = false;
-	while (active)
+	while (!token.stop_requested())
 	{
 		if (allComplete)
 		{
 			// Spin idly until signalled to re-check
+			std::cout << "Spinning...\n";
 			pollingBar.arrive_and_wait();
+			std::cout << "Stopped spinning.\n";
 		}
 
 		bool outdatedJobs = false;

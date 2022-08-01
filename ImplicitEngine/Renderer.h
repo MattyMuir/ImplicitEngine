@@ -36,7 +36,7 @@ public:
 	Renderer(CallbackFun refreshCallback_);
 	~Renderer();
 
-	void JobPollLoop();
+	void JobPollLoop(std::stop_token token);
 	void NewJob(std::string_view funcStr, const Bounds& bounds, size_t id);
 	void EditJob(size_t id, std::string_view newFunc);
 	void DeleteJob(size_t id);
@@ -51,9 +51,8 @@ protected:
 	std::mutex deleteMutex;
 	std::list<size_t> deleteList;
 	CallbackFun refreshCallback;
-	volatile bool active = true;
 
-	std::thread jobPollThread;
+	std::jthread jobPollThread;
 
 	friend Canvas;
 	friend Main;
