@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
-    <ClInclude Include="basicshader.h" />
+    <ClInclude Include="basicshader" />
     <ClInclude Include="Bounds.h" />
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="FilteringRenderer.h" />
@@ -39,7 +39,7 @@
     <ClInclude Include="Seed.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="TextRenderer.h" />
-    <ClInclude Include="textshader.h" />
+    <ClInclude Include="textshader" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="ValueBuffer.h" />
     <ClInclude Include="VertexArray.h" />

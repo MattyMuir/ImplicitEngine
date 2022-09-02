@@ -89,10 +89,10 @@
     <ClInclude Include="glerr.h">
       <Filter>OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="basicshader.h">
+    <ClInclude Include="basicshader">
       <Filter>Shader Files</Filter>
     </ClInclude>
-    <ClInclude Include="textshader.h">
+    <ClInclude Include="textshader">
       <Filter>Shader Files</Filter>
     </ClInclude>
     <ClInclude Include="MarchingRenderer.h">
