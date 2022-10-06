@@ -206,7 +206,7 @@ std::string Main::ProcessEquationString(std::string_view eqnStr)
 	std::vector<std::string> splitEqn = Split(eqnStr, "=");
 
 	if (splitEqn.size() != 2)
-		(new wxDialog(this, wxID_ANY, "Invalid Equation String"))->ShowModal();
+		(new wxDialog(this, wxID_ANY, "Invalid Equation String", wxDefaultPosition, wxSize(200, 100)))->ShowModal();
 
 	return splitEqn[0] + "-(" + splitEqn[1] + ")";
 }
