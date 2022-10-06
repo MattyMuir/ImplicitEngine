@@ -458,7 +458,7 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, uint6
 
 Lines FilteringRenderer::GetTileLines(double* xs, double* ys, double* vals) const
 {
-	// LUT
+	// LUTs
 	static constexpr int indicies[16][4] = { {0, 0, 0, 0},{0, 3, 0, 0},
 		{0, 1, 0, 0}, {1, 3, 0, 0},
 		{1, 2, 0, 0}, {0, 1, 2, 3},
@@ -467,11 +467,11 @@ Lines FilteringRenderer::GetTileLines(double* xs, double* ys, double* vals) cons
 		{0, 3, 1, 2}, {1, 2, 0, 0},
 		{1, 3, 0, 0}, {0, 1, 0, 0},
 		{0, 3, 0, 0}, {0, 0, 0, 0} };
-
 	static constexpr int lNum[16] = { 0, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 0 };
 
 	Lines lines;
 
+	// Determine caseIndex based on signs of verts
 	int caseIndex = 0;
 	caseIndex |= (vals[0] < 0);
 	caseIndex |= (vals[1] < 0) << 1;
@@ -481,40 +481,31 @@ Lines FilteringRenderer::GetTileLines(double* xs, double* ys, double* vals) cons
 	lines.n = lNum[caseIndex];
 	if (lines.n == 0) { return lines; }
 
-	double xInt[4];
-	double yInt[4];
-
 	for (int li = 0; li < lines.n * 2; li++)
 	{
 		int i = indicies[caseIndex][li];
 		if (i % 2)
 		{
-			xInt[li] = xs[i];
+			lines.xs[li] = xs[i];
 			double y1 = ys[i];
 			double y2 = ys[(i + 1) % 4];
 
 			double v1 = vals[i];
 			double v2 = vals[(i + 1) % 4];
 
-			yInt[li] = (y1 * v2 - v1 * y2) / (v2 - v1);
+			lines.ys[li] = (y1 * v2 - v1 * y2) / (v2 - v1);
 		}
 		else
 		{
-			yInt[li] = ys[i];
+			lines.ys[li] = ys[i];
 			double x1 = xs[i];
 			double x2 = xs[i + 1];
 
 			double v1 = vals[i];
 			double v2 = vals[i + 1];
 
-			xInt[li] = (x1 * v2 - v1 * x2) / (v2 - v1);
+			lines.xs[li] = (x1 * v2 - v1 * x2) / (v2 - v1);
 		}
-	}
-
-	for (int i = 0; i < lines.n * 2; i++)
-	{
-		lines.xs[i] = xInt[i];
-		lines.ys[i] = yInt[i];
 	}
 	return lines;
 }
