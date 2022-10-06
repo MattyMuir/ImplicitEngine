@@ -203,12 +203,10 @@ void Main::OnEquationDelete(wxListEvent& evt)
 
 std::string Main::ProcessEquationString(std::string_view eqnStr)
 {
-	std::stringstream ss;
-	ss << eqnStr;
+	std::vector<std::string> splitEqn = Split(eqnStr, "=");
 
-	std::string left, right;
-	std::getline(ss, left, '=');
-	std::getline(ss, right, '=');
+	if (splitEqn.size() != 2)
+		(new wxDialog(this, wxID_ANY, "Invalid Equation String"))->ShowModal();
 
-	return left + "-(" + right + ")";
+	return splitEqn[0] + "-(" + splitEqn[1] + ")";
 }

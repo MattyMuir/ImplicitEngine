@@ -11,6 +11,7 @@
 #include <atomic>
 
 #include "icons.h"
+#include "strutil.h"
 
 class Canvas;
 

@@ -98,6 +98,9 @@
     <ClInclude Include="MarchingRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="strutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -149,6 +152,9 @@
       <Filter>OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="MarchingRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="strutil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
