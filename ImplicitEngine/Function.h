@@ -24,6 +24,8 @@ public:
 
 	void Construct(std::string_view exprStr_);
 
+	bool isValid;
+
 protected:
 	double x = 0, y = 0;
 	exprtk::expression<double>* expr = nullptr;

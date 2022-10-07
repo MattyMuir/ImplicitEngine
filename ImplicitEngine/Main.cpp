@@ -179,8 +179,12 @@ void Main::OnEquationEdit(wxListEvent& evt)
 		equationList->GetListCtrl()->SetItemData(i, id);
 
 		std::string eqnStr = evt.GetText().ToStdString();
-		std::string funcStr = ProcessEquationString(eqnStr);
-		canvas->renderer->NewJob(funcStr, canvas->bounds, id);
+
+		bool strValid = true;
+		std::string funcStr = ProcessEquationString(eqnStr, &strValid);
+		bool compValid = canvas->renderer->NewJob(funcStr, canvas->bounds, id, strValid);
+
+		if (!compValid) ErrorDialog("Compilation Failed");
 	}
 	else
 	{
@@ -188,8 +192,12 @@ void Main::OnEquationEdit(wxListEvent& evt)
 		size_t id = data;
 
 		std::string eqnStr = evt.GetText().ToStdString();
-		std::string funcStr = ProcessEquationString(eqnStr);
-		canvas->renderer->EditJob(id, funcStr);
+
+		bool strValid = true;
+		std::string funcStr = ProcessEquationString(eqnStr, &strValid);
+		bool compValid = canvas->renderer->EditJob(id, funcStr, strValid);
+
+		if (!compValid) ErrorDialog("Compilation Failed");
 	}
 	evt.Skip();
 }
@@ -201,12 +209,25 @@ void Main::OnEquationDelete(wxListEvent& evt)
 	evt.Skip();
 }
 
-std::string Main::ProcessEquationString(std::string_view eqnStr)
+void Main::ErrorDialog(std::string_view msg)
+{
+	wxDialog* dlg = new wxDialog(this, wxID_ANY, "Error", wxDefaultPosition, wxSize(200, 100));
+	wxStaticText* msgText = new wxStaticText(dlg, wxID_ANY, msg.data(),
+		wxPoint(0, 0));
+
+	dlg->ShowModal();
+}
+
+std::string Main::ProcessEquationString(std::string_view eqnStr, bool* isValid)
 {
 	std::vector<std::string> splitEqn = Split(eqnStr, "=");
 
+	if (isValid) *isValid = (splitEqn.size() == 2);
 	if (splitEqn.size() != 2)
-		(new wxDialog(this, wxID_ANY, "Invalid Equation String", wxDefaultPosition, wxSize(200, 100)))->ShowModal();
+	{
+		ErrorDialog("Equation must have exactly one equals sign.");
+		return "0";
+	}
 
 	return splitEqn[0] + "-(" + splitEqn[1] + ")";
 }

@@ -35,5 +35,5 @@ void Function::Construct(std::string_view exprStr_)
 	expr->register_symbol_table(symbols);
 
 	exprtk::parser<double> parser;
-	parser.compile(exprStr, *expr);
+	isValid = parser.compile(exprStr, *expr);
 }

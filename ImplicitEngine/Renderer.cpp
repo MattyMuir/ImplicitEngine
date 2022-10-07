@@ -33,7 +33,7 @@ void Renderer::JobPollLoop()
 		{
 			std::shared_ptr<Job> job = *it;
 
-			if (job->status == JobStatus::OUTDATED)
+			if (job->isValid && job->status == JobStatus::OUTDATED)
 			{
 				outdatedJobs = true;
 				allComplete = false;
@@ -77,19 +77,30 @@ void Renderer::JobPollLoop()
 	}
 }
 
-void Renderer::NewJob(std::string_view funcStr, const Bounds& bounds, size_t id)
+bool Renderer::NewJob(std::string_view funcStr, const Bounds& bounds, size_t id, bool isValid)
 {
-	jobs.push_back(std::make_shared<Job>(funcStr, bounds, id));
+	auto newJob = std::make_shared<Job>(funcStr, bounds, id);
+	bool compValid = newJob->isValid;
+
+	newJob->isValid &= isValid;
+	jobs.push_back(newJob);
+
 	SignalJobRescan();
+	return compValid;
 }
 
-void Renderer::EditJob(size_t id, std::string_view newFunc)
+bool Renderer::EditJob(size_t id, std::string_view newFunc, bool isValid)
 {
 	std::shared_ptr<Job> job = *std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->id == id; });
 	job->funcs.Change(newFunc);
+	job->isValid = job->funcs.isValid;
+	bool compValid = job->isValid;
+
+	job->isValid &= isValid;
 	job->status = JobStatus::OUTDATED;
 
 	SignalJobRescan();
+	return compValid;
 }
 
 void Renderer::DeleteJob(size_t id)
@@ -111,4 +122,10 @@ void Renderer::UpdateJobs()
 void Renderer::SignalJobRescan()
 {
 	pollingBar.arrive();
+}
+
+Job::Job(std::string_view funcStr, const Bounds& bounds_, size_t id_)
+	: funcs(funcStr, 1), bounds(bounds_), id(id_)
+{
+	isValid = funcs.isValid;
 }

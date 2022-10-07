@@ -19,8 +19,7 @@ class Main;
 
 struct Job
 {
-	Job(std::string_view funcStr, const Bounds& bounds_, size_t id_)
-		: funcs(funcStr, 1), bounds(bounds_), id(id_) {}
+	Job(std::string_view funcStr, const Bounds& bounds_, size_t id_);
 
 	JobStatus status = JobStatus::OUTDATED;
 	Bounds bounds;
@@ -28,6 +27,7 @@ struct Job
 	std::vector<double> verts, bufferedVerts;
 	std::mutex bufferMutex;
 	size_t id;
+	bool isValid;
 };
 
 class Renderer
@@ -37,8 +37,8 @@ public:
 	~Renderer();
 
 	void JobPollLoop();
-	void NewJob(std::string_view funcStr, const Bounds& bounds, size_t id);
-	void EditJob(size_t id, std::string_view newFunc);
+	bool NewJob(std::string_view funcStr, const Bounds& bounds, size_t id, bool isValid);
+	bool EditJob(size_t id, std::string_view newFunc, bool isValid);
 	void DeleteJob(size_t id);
 	void UpdateJobs();
 	void SignalJobRescan();

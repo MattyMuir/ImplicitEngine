@@ -14,6 +14,8 @@ public:
 
 	Function* operator[](int index);
 
+	bool isValid;
+
 protected:
 	std::string funcStr;
 	std::vector<Function*> funcs;

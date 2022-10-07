@@ -34,7 +34,9 @@ protected:
 	void OnEquationEdit(wxListEvent& evt);
 	void OnEquationDelete(wxListEvent& evt);
 
-	std::string ProcessEquationString(std::string_view eqnStr);
+	void ErrorDialog(std::string_view msg);
+
+	std::string ProcessEquationString(std::string_view eqnStr, bool* isValid = nullptr);
 
 	// Menu
 	wxMenuBar* menuBar = nullptr;

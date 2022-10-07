@@ -6,6 +6,8 @@ FunctionPack::FunctionPack(std::string_view funcStr_, int size)
 	funcs.reserve(size);
 	for (int i = 0; i < size; i++)
 		funcs.push_back(new Function(funcStr));
+
+	isValid = funcs[0]->isValid;
 }
 
 FunctionPack::~FunctionPack()
@@ -26,6 +28,8 @@ void FunctionPack::Change(std::string_view funcStr_)
 	funcStr = funcStr_;
 	for (Function* func : funcs)
 		func->Construct(funcStr);
+
+	isValid = funcs[0]->isValid;
 }
 
 Function* FunctionPack::operator[](int index)
