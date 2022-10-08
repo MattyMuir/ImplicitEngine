@@ -212,8 +212,7 @@ void Main::OnEquationDelete(wxListEvent& evt)
 void Main::ErrorDialog(std::string_view msg)
 {
 	wxDialog* dlg = new wxDialog(this, wxID_ANY, "Error", wxDefaultPosition, wxSize(200, 100));
-	wxStaticText* msgText = new wxStaticText(dlg, wxID_ANY, msg.data(),
-		wxPoint(0, 0));
+	new wxStaticText(dlg, wxID_ANY, msg.data(), wxPoint(0, 0));
 
 	dlg->ShowModal();
 }

@@ -315,7 +315,6 @@ void Canvas::DrawGridlines(double spacing, float opacity)
 std::pair<int, int> Canvas::RoundMajorGridValue(double val)
 {
     int exponent = (int)floor(log(val) / log(10));
-    double pow = std::pow(10, exponent);
 
     std::pair<int, int> options[] = { { 5, exponent - 1 }, { 1, exponent }, { 2, exponent },
         { 5, exponent }, { 1, exponent + 1 } };
