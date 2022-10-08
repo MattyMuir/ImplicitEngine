@@ -276,10 +276,7 @@ void Canvas::DrawAxes(float width)
 
 void Canvas::DrawGridlines(double spacing, float opacity)
 {
-    float xminS, yminS, xmaxS, ymaxS;
-    ToScreen(xminS, yminS, bounds.xmin, bounds.ymin);
-    ToScreen(xmaxS, ymaxS, bounds.xmax, bounds.ymax);
-
+    // Horizontal lines
     double startY = ceil(bounds.ymin / spacing) * spacing;
     int num = (int)floor(bounds.h() / spacing);
 
@@ -289,8 +286,8 @@ void Canvas::DrawGridlines(double spacing, float opacity)
         double worldY = startY + spacing * yi;
         float screenY = (float)(worldY * relYScale / h - yOffset);
 
-        majorsBuf.push_back({ xminS, screenY });
-        majorsBuf.push_back({ xmaxS, screenY });
+        majorsBuf.push_back({ -1, screenY });
+        majorsBuf.push_back({ 1, screenY });
     }
 
     // Vertical lines
@@ -302,8 +299,8 @@ void Canvas::DrawGridlines(double spacing, float opacity)
         double worldX = startX + spacing * xi;
         float screenX = (float)(worldX * relXScale / w - xOffset);
 
-        majorsBuf.push_back({ screenX, yminS });
-        majorsBuf.push_back({ screenX, ymaxS });
+        majorsBuf.push_back({ screenX, -1 });
+        majorsBuf.push_back({ screenX, 1 });
     }
 
     vb->SetData(majorsBuf.data(), majorsBuf.size() * sizeof(Point));
