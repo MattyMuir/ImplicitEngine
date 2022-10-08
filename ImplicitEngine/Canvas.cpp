@@ -255,20 +255,16 @@ void Canvas::DrawGrid()
 
 void Canvas::DrawAxes(float width)
 {
-    float xminS, yminS, xmaxS, ymaxS;
-    ToScreen(xminS, yminS, bounds.xmin, bounds.ymin);
-    ToScreen(xmaxS, ymaxS, bounds.xmax, bounds.ymax);
-
     float xzeroS = (float)(-xOffset);
     float yzeroS = (float)(-yOffset);
 
     float lineW = width / w;
     float lineH = width / h;
 
-    Point p[8] = { { xminS, yzeroS - lineH }, { xminS, yzeroS + lineH },
-                            { xmaxS, yzeroS - lineH }, { xmaxS, yzeroS + lineH },
-                            { xzeroS - lineW, yminS }, { xzeroS + lineW, yminS },
-                            { xzeroS - lineW, ymaxS }, { xzeroS + lineW, ymaxS } };
+    Point p[8] = { { -1, yzeroS - lineH }, { -1, yzeroS + lineH },
+                            { 1, yzeroS - lineH }, { 1, yzeroS + lineH },
+                            { xzeroS - lineW, -1 }, { xzeroS + lineW, -1 },
+                            { xzeroS - lineW, 1 }, { xzeroS + lineW, 1 } };
     std::array<Point, 12> axisBuf = { p[0], p[1], p[2], p[1], p[2], p[3],
         p[4], p[5], p[6], p[5], p[6], p[7] };
 
