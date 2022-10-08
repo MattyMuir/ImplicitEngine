@@ -276,18 +276,19 @@ void Canvas::DrawAxes(float width)
 
 void Canvas::DrawGridlines(double spacing, float opacity)
 {
+    std::vector<Point> linesBuf;
+
     // Horizontal lines
     double startY = ceil(bounds.ymin / spacing) * spacing;
     int num = (int)floor(bounds.h() / spacing);
 
-    std::vector<Point> majorsBuf;
     for (int yi = 0; yi <= num; yi++)
     {
         double worldY = startY + spacing * yi;
         float screenY = (float)(worldY * relYScale / h - yOffset);
 
-        majorsBuf.push_back({ -1, screenY });
-        majorsBuf.push_back({ 1, screenY });
+        linesBuf.push_back({ -1, screenY });
+        linesBuf.push_back({ 1, screenY });
     }
 
     // Vertical lines
@@ -299,14 +300,14 @@ void Canvas::DrawGridlines(double spacing, float opacity)
         double worldX = startX + spacing * xi;
         float screenX = (float)(worldX * relXScale / w - xOffset);
 
-        majorsBuf.push_back({ screenX, -1 });
-        majorsBuf.push_back({ screenX, 1 });
+        linesBuf.push_back({ screenX, -1 });
+        linesBuf.push_back({ screenX, 1 });
     }
 
-    vb->SetData(majorsBuf.data(), majorsBuf.size() * sizeof(Point));
+    vb->SetData(linesBuf.data(), linesBuf.size() * sizeof(Point));
 
     glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, opacity);
-    glDrawArrays(GL_LINES, 0, (int)majorsBuf.size());
+    glDrawArrays(GL_LINES, 0, (int)linesBuf.size());
 }
 
 std::pair<int, int> Canvas::RoundMajorGridValue(double val)
