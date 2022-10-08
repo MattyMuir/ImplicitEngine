@@ -317,15 +317,18 @@ std::pair<int, int> Canvas::RoundMajorGridValue(double val)
     int exponent = (int)floor(log(val) / log(10));
     double pow = std::pow(10, exponent);
 
-    double v[] = { 5 * pow / 10, pow, 2 * pow, 5 * pow, 10 * pow };
-    std::array<double, 5> d{};
-    for (int i = 0; i < 5; i++)
-        d[i] = std::abs(val - v[i]);
+    std::pair<int, int> options[] = { { 5, exponent - 1 }, { 1, exponent }, { 2, exponent },
+        { 5, exponent }, { 1, exponent + 1 } };
 
-    int best = (int)std::distance(d.begin(), std::min_element(d.begin(), d.end()));
+    auto bestOption = options[0];
+    double bestDist = DBL_MAX;
+    for (const auto& option : options)
+    {
+        double dist = std::abs(val - option.first * std::pow(10, option.second));
+        if (dist < bestDist) { bestOption = option; bestDist = dist; }
+    }
 
-    std::pair<int, int> options[] = { { 5, exponent - 1 }, { 1, exponent }, { 2, exponent }, { 5, exponent }, { 1, exponent + 1 } };
-    return options[best];
+    return bestOption;
 }
 
 void Canvas::DrawAxisText(std::pair<int, int> spacingSF)
