@@ -7,6 +7,8 @@
 #include <mutex>
 #include <barrier>
 
+#include <wx/colour.h>
+
 #include "Bounds.h"
 #include "Timer.h"
 #include "FunctionPack.h"
@@ -27,6 +29,7 @@ struct Job
 	std::vector<double> verts, bufferedVerts;
 	std::mutex bufferMutex;
 	size_t id;
+	wxColour col;
 	bool isValid;
 };
 
@@ -37,9 +40,13 @@ public:
 	~Renderer();
 
 	void JobPollLoop();
+
 	bool NewJob(std::string_view funcStr, const Bounds& bounds, size_t id, bool isValid);
 	bool EditJob(size_t id, std::string_view newFunc, bool isValid);
 	void DeleteJob(size_t id);
+	void SetJobColor(size_t id, wxColour col);
+	wxColour GetJobColour(size_t id);
+
 	void UpdateJobs();
 	void SignalJobRescan();
 

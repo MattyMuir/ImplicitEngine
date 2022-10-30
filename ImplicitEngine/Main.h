@@ -5,6 +5,7 @@
 #include <wx/spinctrl.h>
 #include <wx/listctrl.h>
 #include <wx/editlbox.h>
+#include <wx/clrpicker.h>
 #pragma warning(pop)
 
 #include <sstream>
@@ -26,6 +27,7 @@ protected:
 	void OnMenuExit(wxCommandEvent& evt);
 	void OnGearPressed(wxCommandEvent& evt);
 	void OnHomePressed(wxCommandEvent& evt);
+	void OnColWheelPressed(wxCommandEvent& evt);
 
 	void OnDisplayStandardOutput(wxCommandEvent& evt);
 	void OnDisplaySeeds(wxCommandEvent& evt);
@@ -57,6 +59,7 @@ protected:
 	// Main controls
 	wxEditableListBox* equationList = nullptr;
 	wxButton* homeBtn = nullptr;
+	wxButton* colBtn = nullptr;
 
 	std::atomic<size_t> nextEqnID = 15000;
 

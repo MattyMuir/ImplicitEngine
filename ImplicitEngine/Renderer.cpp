@@ -111,6 +111,21 @@ void Renderer::DeleteJob(size_t id)
 	SignalJobRescan();
 }
 
+void Renderer::SetJobColor(size_t id, wxColour col)
+{
+	std::shared_ptr<Job> job = *std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->id == id; });
+	job->col = col;
+
+	job->status = JobStatus::OUTDATED;
+	refreshCallback();
+}
+
+wxColour Renderer::GetJobColour(size_t id)
+{
+	std::shared_ptr<Job> job = *std::find_if(jobs.begin(), jobs.end(), [id](std::shared_ptr<Job> job) { return job->id == id; });
+	return job->col;
+}
+
 void Renderer::UpdateJobs()
 {
 	for (std::shared_ptr<Job> job : jobs)
@@ -125,7 +140,7 @@ void Renderer::SignalJobRescan()
 }
 
 Job::Job(std::string_view funcStr, const Bounds& bounds_, size_t id_)
-	: funcs(funcStr, 1), bounds(bounds_), id(id_)
+	: funcs(funcStr, 1), bounds(bounds_), id(id_), col(0, 0, 0)
 {
 	isValid = funcs.isValid;
 }

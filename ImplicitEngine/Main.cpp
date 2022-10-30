@@ -8,6 +8,7 @@ wxBEGIN_EVENT_TABLE(Main, wxFrame)
 	EVT_MENU(30003, Main::OnDisplayMesh)
 	EVT_BUTTON(10002, Main::OnGearPressed)
 	EVT_BUTTON(10004, Main::OnHomePressed)
+	EVT_BUTTON(10005, Main::OnColWheelPressed)
 wxEND_EVENT_TABLE()
 
 Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxSize(600, 600))
@@ -45,6 +46,10 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	homeBtn = new wxButton(topBar, 10004, "", wxPoint(170, 5), wxSize(25, 25));
 	homeBtn->SetBitmap(wxImage(25, 25, homeCol, homeAlpha, true));
 	homeBtn->SetToolTip("Reset view");
+
+	colBtn = new wxButton(topBar, 10005, "", wxPoint(200, 5), wxSize(25, 25));
+	colBtn->SetBitmap(wxImage(25, 25, wheelCol, wheelAlpha, true));
+	colBtn->SetToolTip("Change equation colors");
 
 	// Main controls
 	horizSplitter = new wxSplitterWindow(this, 10003, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
@@ -150,6 +155,52 @@ void Main::OnHomePressed(wxCommandEvent&)
 {
 	canvas->ResetView();
 	Refresh();
+}
+
+void Main::OnColWheelPressed(wxCommandEvent&)
+{
+	wxDialog* dlg = new wxDialog(this, wxID_ANY, "Change Equation Colors", wxDefaultPosition, wxSize(200, 170));
+	wxPanel* dlgPanel = new wxPanel(dlg);
+	
+	// Label
+	new wxStaticText(dlgPanel, wxID_ANY, "Equation", { 10, 10 }, { 50, 15 });
+
+	// Choice box
+	wxArrayString eqnStrings;
+	equationList->GetStrings(eqnStrings);
+
+	wxChoice* eqnChoice = new wxChoice(dlgPanel, wxID_ANY, { 10, 30 }, { 160, 25 }, eqnStrings);
+
+	// Color picker
+	wxColourPickerCtrl* clrPicker = new wxColourPickerCtrl(dlgPanel, wxID_ANY, { 0, 0, 0 }, { 10, 60 }, { 70, 25 });
+
+	// Choice box handler
+	eqnChoice->Bind(wxEVT_CHOICE, [=](wxCommandEvent&)
+		{
+			int selection = eqnChoice->GetSelection();
+			if (selection != wxNOT_FOUND)
+			{
+				size_t eqnID = equationList->GetListCtrl()->GetItemData(selection);
+				clrPicker->SetColour(canvas->renderer->GetJobColour(eqnID));
+			}
+		});
+
+	// Button
+	wxButton* okBtn = new wxButton(dlgPanel, wxID_ANY, "Ok", { 10, 90 }, { 35, 25 });
+	okBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent&)
+		{
+			int selection = eqnChoice->GetSelection();
+
+			if (selection == wxNOT_FOUND) ErrorDialog("Select an equation!");
+			else
+			{
+				size_t eqnID = equationList->GetListCtrl()->GetItemData(selection);
+				canvas->renderer->SetJobColor(eqnID, clrPicker->GetColour());
+				dlg->Destroy();
+			}
+		});
+
+	dlg->ShowModal();
 }
 
 void Main::OnDisplayStandardOutput(wxCommandEvent& evt)
