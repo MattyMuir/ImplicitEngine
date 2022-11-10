@@ -235,7 +235,7 @@ void Main::OnEquationEdit(wxListEvent& evt)
 		std::string funcStr = ProcessEquationString(eqnStr, &strValid);
 		bool compValid = canvas->renderer->NewJob(funcStr, canvas->bounds, id, strValid);
 
-		if (!compValid) ErrorDialog("Compilation Failed");
+		if (!compValid) ErrorDialog("Mathematical Syntax Error");
 	}
 	else
 	{
@@ -248,7 +248,7 @@ void Main::OnEquationEdit(wxListEvent& evt)
 		std::string funcStr = ProcessEquationString(eqnStr, &strValid);
 		bool compValid = canvas->renderer->EditJob(id, funcStr, strValid);
 
-		if (!compValid) ErrorDialog("Compilation Failed");
+		if (!compValid) ErrorDialog("Mathematical Syntax Error");
 	}
 	evt.Skip();
 }
