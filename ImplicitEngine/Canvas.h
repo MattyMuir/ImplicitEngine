@@ -89,9 +89,9 @@ protected:
 	void OnMouseDrag(double delX, double delY);
 	void ToScreen(float& xout, float& yout, double x, double y);
 
-	void DrawGrid();
 	void DrawAxes(float width);
 	void DrawGridlines(double spacing, float opacity);
+	std::pair<int, int> DetermineGridSpacing();
 	std::pair<int, int> RoundMajorGridValue(double val);
 	void DrawAxisText(std::pair<int, int> spacingSF);
 	void DrawSeeds(const std::shared_ptr<Seeds>& seeds);

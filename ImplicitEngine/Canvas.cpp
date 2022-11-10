@@ -114,9 +114,16 @@ void Canvas::OnDraw()
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Drawing code here
-    DrawGrid();
+    // === Drawing code ===
+    // Determine Grid Spacing
+    auto [mantissa, exponent] = DetermineGridSpacing();
+    double gridW = pow(10, exponent) * mantissa;
 
+    // Gridlines
+    DrawGridlines(gridW, 0.3f); // Major
+    DrawGridlines(gridW / 5, 0.1f); // Minor
+
+    // Equations
     for (std::shared_ptr<Job> job : renderer->jobs)
     {
         if (displaySeeds)
@@ -138,15 +145,19 @@ void Canvas::OnDraw()
         if (displayStandard)
         {
             // Draw final contour
-            /*size_t hash = std::hash<size_t>{}(job->id);
-            int hue = hash % 256;
-
-            auto col = wxImage::HSVtoRGB(wxImage::HSVValue(hue / 255.0, 1.0, 1.0));*/
 
             std::lock_guard lock(job->bufferMutex);
             DrawContour(job->bufferedVerts, job->col);
         }
     }
+
+    // Axes
+    DrawAxes(2.0f);
+
+    // Axes text
+    DrawAxisText({ mantissa, exponent });
+    shader->Bind();
+    va->Bind();
 
     SwapBuffers();
 }
@@ -226,33 +237,6 @@ void Canvas::ToScreen(float& xout, float& yout, double x, double y)
     yout = (float)(y * relYScale / h - yOffset);
 }
 
-void Canvas::DrawGrid()
-{
-    // === Draw axes ===
-    DrawAxes(2.0f);
-
-    // === Draw major gridlines ===
-    wxDisplay display(wxDisplay::GetFromWindow(this));
-    wxRect screen = display.GetClientArea();
-
-    double targetMajorSize = std::max(screen.width, screen.height) / 15.0;
-
-    // Find grid width that achieves target
-    double exactGridW = targetMajorSize / w * bounds.w();
-    auto [mantissa, exponent] = RoundMajorGridValue(exactGridW);
-    double gridW = pow(10, exponent) * mantissa;
-
-    DrawGridlines(gridW, 0.3f);
-
-    // === Draw minor gridlines ===
-    DrawGridlines(gridW / 5, 0.1f);
-
-    // === Draw axis text ===
-    DrawAxisText({ mantissa, exponent });
-    shader->Bind();
-    va->Bind();
-}
-
 void Canvas::DrawAxes(float width)
 {
     float xzeroS = (float)(-xOffset);
@@ -308,6 +292,18 @@ void Canvas::DrawGridlines(double spacing, float opacity)
 
     glUniform4f(shader->GetUniformLocation("col"), 0.0f, 0.0f, 0.0f, opacity);
     glDrawArrays(GL_LINES, 0, (int)linesBuf.size());
+}
+
+std::pair<int, int> Canvas::DetermineGridSpacing()
+{
+    wxDisplay display(wxDisplay::GetFromWindow(this));
+    wxRect screen = display.GetClientArea();
+
+    double targetMajorSize = std::max(screen.width, screen.height) / 15.0;
+
+    // Find grid width that achieves target
+    double exactGridW = targetMajorSize / w * bounds.w();
+    return RoundMajorGridValue(exactGridW);
 }
 
 std::pair<int, int> Canvas::RoundMajorGridValue(double val)
