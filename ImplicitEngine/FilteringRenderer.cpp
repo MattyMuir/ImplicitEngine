@@ -220,7 +220,7 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 
 	// Calculate which regions of the image to dedicate to each thread
 	int threadNum = pool.get_thread_count();
-	funcs.Resize(threadNum + 2);
+	funcs.Resize(threadNum + 1);
 
 	std::vector<uint64_t> startRows(threadNum);
 	std::vector<uint64_t> endRows(threadNum);
