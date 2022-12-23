@@ -118,16 +118,13 @@ void FilteringRenderer::ProcessJob(Job* job)
 	if (keepMesh)
 	{
 		if (jobMeshes.contains(job->id))
-		{
 			*jobMeshes[job->id] = mesh;
-		}
 		else
 			jobMeshes[job->id] = std::make_shared<Mesh>(mesh);
 	}
 
-	// ===== Data Output =====
+	// ===== Contouring =====
 	job->verts.clear();
-
 	ContourMesh(job->verts, job->funcs);
 
 	STOP_LOG(frame);
