@@ -16,5 +16,5 @@ struct ValueBuffer
 	ValueBuffer(int64_t bufSize_);
 
 	double& operator[](int64_t index);
-	void SetActive(bool val);
+	void SetAllActive(bool val);
 };

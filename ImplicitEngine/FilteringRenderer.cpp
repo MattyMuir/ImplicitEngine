@@ -330,129 +330,64 @@ void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* fu
 
 void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, uint64_t y) const
 {
+	// References for readability
 	ValueBuffer& buf = *bufPtr;
 	Function& func = *funcPtr;
 	const Bounds& bounds = mesh.bounds;
 
-	buf.SetActive(false);
-	int64_t finalDim = (int64_t)1 << finalMeshRes;
+	buf.SetAllActive(false);
+
+	// Calculate useful values
+	uint64_t finalDim = (uint64_t)1 << finalMeshRes;
 	int sqsPerTile = (int)(finalDim / mesh.dim);
 	double worldY = (double)y / finalDim * bounds.h() + bounds.ymin;
-
 	double delX = bounds.w() / finalDim;
 
-	if (y == 0)  // top row
+	if (y == 0 || y == finalDim || y % sqsPerTile != 0) // top, bottom, or non-boundary row
 	{
-		bool lastTile = false;
-		bool currentTile;
+		bool currentTile, lastTile = false;
+
+		uint64_t majorRowOffset = ((y == finalDim) ? (mesh.dim - 1) : y / sqsPerTile) * mesh.dim; // Offset for accessing filter-mesh arr
+		uint64_t majorIndex = 0;
+		for (int majorX = 0; majorX < mesh.dim; majorX++, majorIndex += sqsPerTile, lastTile = currentTile)
+		{
+			currentTile = mesh.boxes[majorRowOffset + majorX];
+			double worldX = majorIndex * delX + bounds.xmin;
+			if (lastTile || currentTile) buf[majorIndex] = func(worldX, worldY); // leftmost value
+			if (!currentTile) continue; //Skip this tile
+
+			// Fill all 'fully-internal' tile values
+			for (int minorX = 1; minorX < sqsPerTile; minorX++)
+			{
+				worldX += delX;
+				uint64_t bufIndex = majorIndex + minorX;
+				buf[bufIndex] = func(worldX, worldY);
+			}
+			if (mesh.boxes[majorRowOffset + mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
+		}
+	}
+	else // Boundary row
+	{
+		bool currentTile, lastTile = false;
+		int64_t majorRowOffset = (y - 1) / sqsPerTile * mesh.dim;
 
 		uint64_t majorIndex = 0;
-		for (int majorX = 0; majorX < mesh.dim; majorX++)
+		for (int majorX = 0; majorX < mesh.dim; majorX++, majorIndex += sqsPerTile, lastTile = currentTile)
 		{
-			currentTile = mesh.boxes[majorX];
+			// Boundary row, tile above and below need to be checked
+			currentTile = mesh.boxes[majorRowOffset + majorX] || mesh.boxes[majorRowOffset + mesh.dim + majorX];
 			double worldX = majorIndex * delX + bounds.xmin;
-			if (lastTile || currentTile) buf[majorIndex] = func(worldX, worldY);
+			if (lastTile || currentTile) buf[majorIndex] = func(worldX, worldY); // leftmost value
+			if (!currentTile) continue; //Skip this tile
 
-			if (currentTile)
+			for (int minorX = 1; minorX < sqsPerTile; minorX++)
 			{
-				for (int minorX = 1; minorX < sqsPerTile; minorX++)
-				{
-					worldX += delX;
-					uint64_t bufIndex = majorIndex + minorX;
-					buf[bufIndex] = func(worldX, worldY);
-				}
+				worldX += delX;
+				uint64_t bufIndex = majorIndex + minorX;
+				buf[bufIndex] = func(worldX, worldY);
 			}
-			majorIndex += sqsPerTile;
-			lastTile = currentTile;
 		}
-		if (mesh.boxes[mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
-	}
-	else if ((int64_t)y == finalDim) // bottom row
-	{
-		bool lastTile = false;
-		bool currentTile;
-
-		uint64_t majorIndex = 0;
-		for (int majorX = 0; majorX < mesh.dim; majorX++)
-		{
-			currentTile = mesh.boxes[(mesh.dim - 1) * mesh.dim + majorX];
-			double worldX = majorIndex * delX + bounds.xmin;
-			if (lastTile || currentTile) buf[majorIndex] = func(worldX, worldY);
-
-			if (currentTile)
-			{
-				for (int minorX = 1; minorX < sqsPerTile; minorX++)
-				{
-					worldX += delX;
-					uint64_t bufIndex = majorIndex + minorX;
-					buf[bufIndex] = func(worldX, worldY);
-				}
-			}
-			majorIndex += sqsPerTile;
-			lastTile = currentTile;
-		}
-		if (mesh.boxes[mesh.dim * mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
-	}
-	else // Middle row
-	{
-		if (y % sqsPerTile == 0)
-		{
-			// Boundary row
-			bool lastTile = false;
-			bool currentTile;
-
-			int64_t rowIndexOffset = (y - 1) / sqsPerTile * mesh.dim;
-
-			uint64_t majorIndex = 0;
-			for (int majorX = 0; majorX < mesh.dim; majorX++)
-			{
-				currentTile = mesh.boxes[rowIndexOffset + majorX] || mesh.boxes[rowIndexOffset + mesh.dim + majorX];
-				double worldX = majorIndex * delX + bounds.xmin;
-				if (lastTile || currentTile) buf[majorIndex] = func(worldX, worldY);
-
-				if (currentTile)
-				{
-					for (int minorX = 1; minorX < sqsPerTile; minorX++)
-					{
-						worldX += delX;
-						uint64_t bufIndex = majorIndex + minorX;
-						buf[bufIndex] = func(worldX, worldY);
-					}
-				}
-				majorIndex += sqsPerTile;
-				lastTile = currentTile;
-			}
-			if (mesh.boxes[rowIndexOffset + mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
-		}
-		else
-		{
-			// Non boundary row
-			bool lastTile = false;
-			bool currentTile;
-
-			int64_t rowIndexOffset = y / sqsPerTile * mesh.dim;
-
-			uint64_t majorIndex = 0;
-			for (int majorX = 0; majorX < mesh.dim; majorX++)
-			{
-				currentTile = mesh.boxes[rowIndexOffset + majorX];
-				double worldX = majorIndex * delX + bounds.xmin;
-				if (lastTile || currentTile) buf[majorIndex] = func(worldX, worldY);
-
-				if (currentTile)
-				{
-					for (int minorX = 1; minorX < sqsPerTile; minorX++)
-					{
-						worldX += delX;
-						uint64_t bufIndex = majorIndex + minorX;
-						buf[bufIndex] = func(worldX, worldY);
-					}
-				}
-				majorIndex += sqsPerTile;
-				lastTile = currentTile;
-			}
-			if (mesh.boxes[rowIndexOffset + mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
-		}
+		if (mesh.boxes[majorRowOffset + mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
 	}
 }
 

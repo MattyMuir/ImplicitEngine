@@ -24,7 +24,7 @@ double& ValueBuffer::operator[](int64_t index)
 	return vals[index];
 }
 
-void ValueBuffer::SetActive(bool val)
+void ValueBuffer::SetAllActive(bool val)
 {
 	std::fill(active.begin(), active.end(), val);
 }
