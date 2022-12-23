@@ -240,7 +240,7 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 	std::vector<std::future<void>> futs;
 	for (int ti = 0; ti <= threadNum; ti++)
 	{
-		uint64_t gy = (ti < threadNum) ? startRows[ti] : endRows[threadNum - 1] + 1;
+		uint64_t gy = (ti < threadNum) ? startRows[ti] : finalDim;
 		ValueBuffer* outPtr = &boundaries[ti];
 		Function* funcPtr = funcs[ti];
 		futs.push_back(pool.submit([=, this]() { this->FillBuffer(outPtr, funcPtr, gy); }));
