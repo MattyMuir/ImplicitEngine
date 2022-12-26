@@ -272,7 +272,8 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 	}
 }
 
-void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* funcPtr, uint64_t startRow, uint64_t endRow, const ValueBuffer* bottom, const ValueBuffer* top) const
+void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* funcPtr,
+	uint64_t startRow, uint64_t endRow, const ValueBuffer* bottom, const ValueBuffer* top) const
 {
 	// References and useful values
 	const Bounds& bounds = mesh.bounds;
