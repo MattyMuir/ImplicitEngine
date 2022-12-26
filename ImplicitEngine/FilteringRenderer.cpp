@@ -274,13 +274,15 @@ void FilteringRenderer::ContourMesh(std::vector<double>& lineVerts, FunctionPack
 
 void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* funcPtr, uint64_t startRow, uint64_t endRow, const ValueBuffer* bottom, const ValueBuffer* top) const
 {
+	// References and useful values
+	const Bounds& bounds = mesh.bounds;
 	uint64_t finalDim = (uint64_t)1 << finalMeshRes;
-	uint64_t bufSize = finalDim + 1;
+	double dx = bounds.w() / finalDim; // Width of grid squares
+	double dy = bounds.h() / finalDim; // Height of grid squares
 
+	uint64_t bufSize = finalDim + 1;
 	ValueBuffer downBuf(bufSize);
 	ValueBuffer upBuf(bufSize);
-
-	const Bounds& bounds = mesh.bounds;
 
 	// Fill downBuf with values from param
 	downBuf = *bottom;
@@ -300,13 +302,11 @@ void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* fu
 			if (downBuf.active[gx] && downBuf.active[gx + 1] && upBuf.active[gx] && upBuf.active[gx + 1]) {}
 			else { continue; }
 
-			double lx = (double)gx / finalDim * bounds.w()  + bounds.xmin;
-			double rx = (double)(gx + 1) / finalDim * bounds.w() + bounds.xmin;
-			double ty = (double)gy / finalDim * bounds.h() + bounds.ymin;
-			double by = (double)(gy - 1) / finalDim * bounds.h() + bounds.ymin;
+			double lx = (double)gx / finalDim * bounds.w() + bounds.xmin; // Left x-coord
+			double ty = (double)gy / finalDim * bounds.h() + bounds.ymin; // Top y-coord
 
-			double xs[4] = { lx, rx, rx, lx };
-			double ys[4] = { ty, ty, by, by };
+			double xs[4] = { lx, lx + dx, lx + dx, lx };
+			double ys[4] = { ty, ty, ty - dy, ty - dy };
 			double vals[4] = { upBuf[gx], upBuf[gx + 1], downBuf[gx + 1], downBuf[gx] };
 			Lines lines = GetTileLines(xs, ys, vals);
 
