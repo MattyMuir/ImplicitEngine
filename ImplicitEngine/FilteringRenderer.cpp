@@ -360,8 +360,8 @@ void FilteringRenderer::FillBuffer(ValueBuffer* bufPtr, Function* funcPtr, uint6
 				uint64_t bufIndex = tileStartIndex + minorX;
 				buf[bufIndex] = func(worldX, worldY);
 			}
-			if (mesh.boxes[filterRowOffset + mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
 		}
+		if (mesh.boxes[filterRowOffset + mesh.dim - 1]) buf[finalDim] = func(bounds.xmax, worldY);
 	}
 	else // Boundary row
 	{
