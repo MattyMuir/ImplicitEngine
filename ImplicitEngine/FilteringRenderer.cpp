@@ -281,8 +281,7 @@ void FilteringRenderer::ContourRows(std::vector<double>* lineVerts, Function* fu
 	double dy = bounds.h() / finalDim; // Height of grid squares
 
 	uint64_t bufSize = finalDim + 1;
-	ValueBuffer downBuf(bufSize);
-	ValueBuffer upBuf(bufSize);
+	ValueBuffer downBuf(bufSize), upBuf(bufSize);
 
 	// Fill downBuf with values from param
 	downBuf = *bottom;
