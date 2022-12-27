@@ -401,8 +401,6 @@ Lines FilteringRenderer::GetTileLines(double* xs, double* ys, double* vals) cons
 		{0, 3, 0, 0}, {0, 0, 0, 0} };
 	static constexpr int lNum[16] = { 0, 1, 1, 1, 1, 2, 1, 1, 1, 1, 2, 1, 1, 1, 1, 0 };
 
-	Lines lines;
-
 	// Determine caseIndex based on signs of verts
 	int caseIndex = 0;
 	caseIndex |= (vals[0] < 0);
@@ -410,33 +408,34 @@ Lines FilteringRenderer::GetTileLines(double* xs, double* ys, double* vals) cons
 	caseIndex |= (vals[2] < 0) << 2;
 	caseIndex |= (vals[3] < 0) << 3;
 
+	Lines lines;
 	lines.n = lNum[caseIndex];
 	if (lines.n == 0) { return lines; }
 
-	for (int li = 0; li < lines.n * 2; li++)
+	for (int edgeIndex = 0; edgeIndex < lines.n * 2; edgeIndex++)
 	{
-		int i = indicies[caseIndex][li];
-		if (i % 2)
+		int edgePos = indicies[caseIndex][edgeIndex];
+		if (edgePos % 2) // Vertical edge
 		{
-			lines.xs[li] = xs[i];
-			double y1 = ys[i];
-			double y2 = ys[(i + 1) % 4];
+			lines.xs[edgeIndex] = xs[edgePos];
+			double y1 = ys[edgePos];
+			double y2 = ys[(edgePos + 1) % 4];
 
-			double v1 = vals[i];
-			double v2 = vals[(i + 1) % 4];
+			double v1 = vals[edgePos];
+			double v2 = vals[(edgePos + 1) % 4];
 
-			lines.ys[li] = (y1 * v2 - v1 * y2) / (v2 - v1);
+			lines.ys[edgeIndex] = (y1 * v2 - v1 * y2) / (v2 - v1);
 		}
-		else
+		else // Horizontal edge
 		{
-			lines.ys[li] = ys[i];
-			double x1 = xs[i];
-			double x2 = xs[i + 1];
+			lines.ys[edgeIndex] = ys[edgePos];
+			double x1 = xs[edgePos];
+			double x2 = xs[edgePos + 1];
 
-			double v1 = vals[i];
-			double v2 = vals[i + 1];
+			double v1 = vals[edgePos];
+			double v2 = vals[edgePos + 1];
 
-			lines.xs[li] = (x1 * v2 - v1 * x2) / (v2 - v1);
+			lines.xs[edgeIndex] = (x1 * v2 - v1 * x2) / (v2 - v1);
 		}
 	}
 	return lines;
