@@ -78,7 +78,7 @@ void FilteringRenderer::ProcessJob(Job* job)
 
 	Bounds bounds = job->bounds;
 
-	TIMER(frame);
+	Timer frameTimer;
 
 	// ===== Seed Generation =====
 	for (auto& vec : seeds)
@@ -127,7 +127,9 @@ void FilteringRenderer::ProcessJob(Job* job)
 	job->verts.clear();
 	ContourMesh(job->verts, job->funcs);
 
-	STOP_LOG(frame);
+	frameTimer.Stop(false);
+	std::cout << frameTimer.GetDuration().count() << '\n';
+	using Duration = decltype(frameTimer.GetDuration());
 }
 
 void FilteringRenderer::InsertSeed(const Seed& s)

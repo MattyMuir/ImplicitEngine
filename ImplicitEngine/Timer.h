@@ -1,38 +1,69 @@
 #pragma once
-#include <iostream>
-#include <sstream>
+#include <string>
 #include <chrono>
-using namespace std::chrono;
 
 #define TIMING 1
 
 #if TIMING
-#define TIMER(x) Timer x
-#define STOP_LOG(x) x.StopLog(#x)
+#define TIMER(name) Timer name
+#define STOP_LOG(name) { name.Stop(false); std::cout << #name << " took: "; name.Log(); }
+#define TIME_SCOPE(name) ScopedTimer name(#name)
 #else
-#define TIMER(x)
-#define STOP_LOG(x)
+#define TIMER(name)
+#define STOP_LOG(name)
+#define TIME_SCOPE(name)
 #endif
 
 class Timer
 {
+	using TimePoint = std::chrono::system_clock::time_point;
+	using Duration = std::chrono::system_clock::duration;
+
 public:
-    Timer()
-        : startTimePoint(high_resolution_clock::now()) {}
+	Timer(bool start = true)
+		: duration(0)
+	{
+		if (start) Start();
+	}
 
-    void StopLog(std::string_view timerName = "")
-    {
-        duration x = high_resolution_clock::now() - startTimePoint;
-        uint64_t microSeconds = duration_cast<microseconds>(x).count();
+	void Start()
+	{
+		using namespace std::chrono;
+		start = system_clock::now();
+	}
+	void Stop(bool log = true)
+	{
+		using namespace std::chrono;
+		TimePoint end = system_clock::now();
+		duration += (end - start);
 
-        std::stringstream ss;
-        if (microSeconds < 1000)
-            ss << timerName << " took: " << microSeconds << "us\n";
-        else
-            ss << timerName << " took: " << microSeconds * 0.001 << "ms\n";
+		if (log) Log();
+	}
 
-        std::cout << ss.str() << std::flush;
-    }
-private:
-    time_point<high_resolution_clock> startTimePoint;
+	void Log()
+	{
+		using namespace std::chrono;
+		static constexpr uint64_t num = duration_cast<Duration>(1s).count();
+
+		uint64_t count = duration.count();
+		double millis = (double)count / num * 1000.0;
+
+		if (millis < 1.0) std::cout << millis * 1000 << "us\n";
+		else std::cout << millis << "ms\n";
+	}
+	Duration GetDuration() { return duration; }
+
+protected:
+	TimePoint start;
+	Duration duration;
+};
+
+class ScopedTimer : Timer
+{
+public:
+	ScopedTimer(std::string_view name_) : Timer(false), name(name_) { Start(); }
+	~ScopedTimer() { Stop(false); std::cout << name << " took: "; Log(); }
+
+protected:
+	std::string name;
 };

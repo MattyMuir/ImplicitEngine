@@ -15,9 +15,10 @@ int MarchingRenderer::GetFinalMeshRes()
 
 void MarchingRenderer::ProcessJob(Job* job)
 {
-	TIMER(frame);
-	DoProcessJobSingle(job);
-	STOP_LOG(frame);
+	Timer frameTimer;
+	DoProcessJobMulti(job);
+	frameTimer.Stop(false);
+	std::cout << frameTimer.GetDuration().count() << '\n';
 }
 
 void MarchingRenderer::DoProcessJobSingle(Job* job)
