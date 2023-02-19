@@ -431,6 +431,8 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
 
 void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
 {
+#if 0
+    TIMER(transform);
     std::vector<float> screenVerts;
     screenVerts.reserve(verts.size());
 
@@ -441,10 +443,85 @@ void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
         screenVerts.push_back((float)(verts[i] * xScale - xOffset));
         screenVerts.push_back((float)(verts[i + 1] * yScale - yOffset));
     }
+    STOP_LOG(transform);
 
     vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
     glUniform4f(shader->GetUniformLocation("col"), col.Red() / 255.0f, col.Green() / 255.0f, col.Blue() / 255.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, (int)screenVerts.size() / 2);
+#else
+
+    TIMER(transform);
+    // Transformation constants
+    double xScale = relXScale / w;
+    double yScale = relYScale / h;
+
+    // Allocate output buffer, with same alignment as input buffer
+    size_t offset = (uint64_t)verts.data() % 32;
+    float* screenVerts = (float*)_aligned_offset_malloc(verts.size() * sizeof(float), 16, offset / 2);
+
+    // Calculate position of packs
+    uint64_t vecStart = (offset == 0) ? 0 : (32 - offset) / 8;
+    __m256d* packs = (__m256d*) & verts[vecStart];
+    __m128* outPacks = (__m128*) & screenVerts[vecStart];
+    assert((uint64_t)packs % 32 == 0);
+    assert((uint64_t)outPacks % 16 == 0);
+    uint64_t packNum = (verts.size() - vecStart) / 4;
+
+    if (verts.size() < 4)
+    {
+        // Vector is too small to utilize SIMD
+        for (uint64_t i = 0; i < verts.size(); i++)
+        {
+            if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
+            else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
+        }
+    }
+    else
+    {
+        // Compute first few transformations
+        for (uint64_t i = 0; i < vecStart; i++)
+        {
+            if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
+            else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
+        }
+
+        // Packed transformations
+        // Prepare packs for multiplication and subtraction
+        __m256d mulPack;
+        __m256d subPack;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if ((i + vecStart) % 2 == 0)
+            {
+                mulPack.m256d_f64[i] = xScale;
+                subPack.m256d_f64[i] = xOffset;
+            }
+            else
+            {
+                mulPack.m256d_f64[i] = yScale;
+                subPack.m256d_f64[i] = yOffset;
+            }
+        }
+
+        // Complete transformations
+        for (uint64_t pi = 0; pi < packNum; pi++)
+            outPacks[pi] = _mm256_cvtpd_ps(_mm256_msub_pd(packs[pi], mulPack, subPack));
+
+        // Compute final few transformations
+        for (uint64_t i = vecStart + packNum * 4; i < verts.size(); i++)
+        {
+            if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
+            else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
+        }
+    }
+    STOP_LOG(transform);
+
+    vb->SetData(screenVerts, verts.size() * sizeof(float));
+    glUniform4f(shader->GetUniformLocation("col"), col.Red() / 255.0f, col.Green() / 255.0f, col.Blue() / 255.0f, 1.0f);
+    glDrawArrays(GL_LINES, 0, (int)verts.size() / 2);
+    _aligned_free(screenVerts);
+#endif
 }
 
 void Canvas::RecalculateBounds()
