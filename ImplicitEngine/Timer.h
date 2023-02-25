@@ -43,10 +43,10 @@ public:
 	void Log()
 	{
 		using namespace std::chrono;
-		static constexpr uint64_t num = duration_cast<Duration>(1s).count();
+		static constexpr auto res = duration_cast<Duration>(1s).count();
 
-		uint64_t count = duration.count();
-		double millis = (double)count / num * 1000.0;
+		auto count = duration.count();
+		double millis = (double)count / res * 1000.0;
 
 		if (millis < 1.0) std::cout << millis * 1000 << "us\n";
 		else std::cout << millis << "ms\n";

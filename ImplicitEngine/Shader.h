@@ -19,7 +19,7 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
-	unsigned int GetUniformLocation(const std::string& varName);
+	GLint GetUniformLocation(const std::string& varName);
 	// Uniform setting is done using 'glUniform[TYPE](location, ...)'
 	// e.g.		glUniform4f(location, 0.1f, 0.2f, 0.3f, 0.4f);
 private:

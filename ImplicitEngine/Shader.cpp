@@ -41,9 +41,9 @@ void Shader::Unbind() const
     GlCall(glUseProgram(0));
 }
 
-unsigned int Shader::GetUniformLocation(const std::string& varName)
+GLint Shader::GetUniformLocation(const std::string& varName)
 {
-    GlCall(int location = glGetUniformLocation(dataID, varName.c_str()));
+    GlCall(GLint location = glGetUniformLocation(dataID, varName.c_str()));
     assert(location != -1);
     return location;
 }

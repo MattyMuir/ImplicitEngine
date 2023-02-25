@@ -296,7 +296,7 @@ void Canvas::DrawGridlines(double spacing, float opacity)
 
 std::pair<int, int> Canvas::DetermineGridSpacing()
 {
-    wxDisplay display(wxDisplay::GetFromWindow(this));
+    wxDisplay display((unsigned int)wxDisplay::GetFromWindow(this));
     wxRect screen = display.GetClientArea();
 
     double targetMajorSize = std::max(screen.width, screen.height) / 15.0;
