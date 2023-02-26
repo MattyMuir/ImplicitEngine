@@ -2,6 +2,14 @@
 
 void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* funcPtr, Bounds bounds, int maxEval, int filterMeshRes, int seedNum)
 {
+	// Parameters
+	static constexpr double boundsExpansion = 1.1;
+	static constexpr double finiteDifRatio = 1e-10;
+	static constexpr size_t signChangeThresh = 1;
+	static constexpr double newtOverstep = 1.1;
+	static constexpr double tomsThreshold = 1000.0;
+	static constexpr uint64_t maxTomsIter = 16;
+
 	Function& func = *funcPtr;
 
 	// Initialize random number generation
@@ -20,14 +28,13 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 
 	int posNum = 0, negNum = 0;
 
-	double expansion = 1.1;
-	Bounds exBounds = bounds.Expand(expansion);
+	Bounds exBounds = bounds.Expand(boundsExpansion);
 
 	// Randomly position seeds, evaluate, and add to vec
 	for (int i = 0; i < seedNum; i++)
 	{
-		Seed s = { exBounds.xmin + w * expansion * (double)rand() / RAND_MAX,
-			exBounds.ymin + h * expansion * (double)rand() / RAND_MAX };
+		Seed s = { exBounds.xmin + w * boundsExpansion * (double)rand() / RAND_MAX,
+			exBounds.ymin + h * boundsExpansion * (double)rand() / RAND_MAX };
 
 		s.fs = func(s.x, s.y);
 		if (std::isfinite(s.fs))
@@ -42,7 +49,7 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	// Find oppositely signed points
 	int maxNewtIter = maxEval / 3;
 	int newtIter = 0;
-	while (std::min(posNum, negNum) < 1 && newtIter < maxNewtIter)
+	while (std::min(posNum, negNum) < signChangeThresh && newtIter < maxNewtIter)
 	{
 		// No sign flips, performing newton
 		newtIter++;
@@ -52,15 +59,14 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 		for (Seed& s : unBracketedSeeds)
 		{
 			if (!s.active) continue;
-			static constexpr double q = 1e-10;
-			double fxn = func(s.x + s.x * q, s.y);
-			double fyn = func(s.x, s.y + s.y * q);
+			double fxn = func(s.x + s.x * finiteDifRatio, s.y);
+			double fyn = func(s.x, s.y + s.y * finiteDifRatio);
 
-			double dx = (fxn - s.fs) / (s.x * q);
-			double dy = (fyn - s.fs) / (s.y * q);
+			double dx = (fxn - s.fs) / (s.x * finiteDifRatio);
+			double dy = (fyn - s.fs) / (s.y * finiteDifRatio);
 
-			s.x -= 1.1 * (s.fs * dx) / (dx * dx + dy * dy);
-			s.y -= 1.1 * (s.fs * dy) / (dx * dx + dy * dy);
+			s.x -= newtOverstep * (s.fs * dx) / (dx * dx + dy * dy);
+			s.y -= newtOverstep * (s.fs * dy) / (dx * dx + dy * dy);
 
 			s.fs = func(s.x, s.y);
 			if (!std::isfinite(s.fs)) { s.active = false; continue; }
@@ -74,9 +80,9 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	if (std::min(posNum, negNum) == 0) return;
 
 	// Proximity bracketing
-	// Seperate seeds into pos and neg
-	std::vector<int> seeds1, seeds2;
-	for (int i = 0; i < unBracketedSeeds.size(); i++)
+	// Separate seeds into pos and neg
+	std::vector<size_t> seeds1, seeds2;
+	for (size_t i = 0; i < unBracketedSeeds.size(); i++)
 	{
 		if (!unBracketedSeeds[i].active) continue;
 		if (unBracketedSeeds[i].fs > 0) seeds1.push_back(i);
@@ -87,13 +93,13 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 	if (seeds2.size() > seeds1.size()) std::swap(seeds1, seeds2);
 
 	bracketedSeeds.reserve(seeds1.size() + seeds2.size());
-	for (int i = 0; i < seeds1.size(); i++)
+	for (size_t i = 0; i < seeds1.size(); i++)
 	{
 		Seed& s1 = unBracketedSeeds[seeds1[i]];
 		Seed* s2 = &s1; // Set to a the location of s1 to avoid uninitialized warning
 
 		double bestDist = DBL_MAX;
-		for (int si = 0; si < SMPL_NUM; si++)
+		for (size_t si = 0; si < SMPL_NUM; si++)
 		{
 			Seed& s = unBracketedSeeds[seeds2[(i + si) % seeds2.size()]];
 			double dist = Distance(s1, s);
@@ -108,13 +114,13 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 		bracketedSeeds.push_back({ s1, *s2 });
 	}
 
-	for (int i = 0; i < seeds2.size(); i++)
+	for (size_t i = 0; i < seeds2.size(); i++)
 	{
 		Seed& s2 = unBracketedSeeds[seeds2[i]];
 		Seed* s1 = &s2; // Set to a the location of s2 to avoid uninitialized warning
 
 		double bestDist = DBL_MAX;
-		for (int si = 0; si < SMPL_NUM; si++)
+		for (size_t si = 0; si < SMPL_NUM; si++)
 		{
 			Seed& s = unBracketedSeeds[seeds1[(i + SMPL_NUM + si) % seeds1.size()]];
 			double dist = Distance(s2, s);
@@ -129,12 +135,12 @@ void ProximalBracketingGenerator::Generate(std::vector<Seed>* seeds, Function* f
 		bracketedSeeds.push_back({ *s1, s2 });
 	}
 
-	double absTol = std::min(w, h) / 1000;
+	double absTol = std::min(w, h) / tomsThreshold;
 
 	// Perform bracketed refinement
 	for (auto& [s1, s2] : bracketedSeeds)
 	{
-		uint64_t maxIter = 16;
+		uint64_t maxIter = maxTomsIter;
 
 		double dx = s2.x - s1.x;
 		double dy = s2.y - s1.y;

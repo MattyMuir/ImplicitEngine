@@ -25,7 +25,7 @@ void VertexArray::AddVBuffer(const VertexBuffer& vb, const VertexBufferLayout& v
 	vb.Bind();
 	const auto& layoutElements = vbLayout.GetElements();
 	char* offset = (char*)0;
-	for (int i = 0; i < layoutElements.size(); i++)
+	for (size_t i = 0; i < layoutElements.size(); i++)
 	{
 		const LayoutElement& element = layoutElements[i];
 

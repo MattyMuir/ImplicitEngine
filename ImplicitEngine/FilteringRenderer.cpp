@@ -1,8 +1,8 @@
 #include "FilteringRenderer.h"
 
 FilteringRenderer::FilteringRenderer(CallbackFun refreshFun, int seedNum_, int filterMeshRes_, int finalMeshRes_)
-	: Renderer(refreshFun), seedNum(seedNum_), filterMeshRes(filterMeshRes_), finalMeshRes(finalMeshRes_),
-	pool(std::thread::hardware_concurrency() - 1), seeds(pool.get_thread_count()), mesh(filterMeshRes) {}
+	: Renderer(refreshFun), pool(std::thread::hardware_concurrency() - 1), seedNum(seedNum_), filterMeshRes(filterMeshRes_),
+		finalMeshRes(finalMeshRes_), seeds(pool.get_thread_count()), mesh(filterMeshRes) {}
 
 FilteringRenderer::~FilteringRenderer()
 {
@@ -129,7 +129,6 @@ void FilteringRenderer::ProcessJob(Job* job)
 
 	frameTimer.Stop(false);
 	std::cout << frameTimer.GetDuration().count() << '\n';
-	using Duration = decltype(frameTimer.GetDuration());
 }
 
 void FilteringRenderer::InsertSeed(const Seed& s)

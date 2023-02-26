@@ -18,7 +18,7 @@ struct Mesh
 	Mesh(int res)
 		: dim((int)Pow2(res)), boxes((size_t)dim * dim) {}
 	Mesh(const std::vector<uint8_t>& boxes_, const Bounds& bounds_, int dim_)
-		: boxes(boxes_), dim(dim_), bounds(bounds_) {}
+		: dim(dim_), boxes(boxes_), bounds(bounds_) {}
 
 	int dim;
 	std::vector<uint8_t> boxes;

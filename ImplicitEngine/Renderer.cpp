@@ -1,7 +1,7 @@
 #include "Renderer.h"
 
 Renderer::Renderer(CallbackFun refreshCallback_)
-	: refreshCallback(refreshCallback_), pollingBar(2),
+	: pollingBar(2), refreshCallback(refreshCallback_),
 	jobPollThread(&Renderer::JobPollLoop, this)
 {}
 
@@ -140,7 +140,7 @@ void Renderer::SignalJobRescan()
 }
 
 Job::Job(std::string_view funcStr, const Bounds& bounds_, size_t id_)
-	: funcs(funcStr, 1), bounds(bounds_), id(id_), col(0, 0, 0)
+	: bounds(bounds_), funcs(funcStr, 1), id(id_), col(0, 0, 0)
 {
 	isValid = funcs.isValid;
 }

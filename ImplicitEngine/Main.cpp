@@ -37,7 +37,7 @@ Main::Main() : wxFrame(nullptr, wxID_ANY, "ImplicitEngine", wxPoint(30, 30), wxS
 	detailLabel = new wxStaticText(topBar, wxID_ANY, "Plot Detail", wxPoint(10, 10), wxSize(75, 20));
 	detailSpinner = new wxSpinCtrl(topBar, 10001, "", wxPoint(90, 5), wxSize(50, 25), wxALIGN_LEFT | wxSP_ARROW_KEYS, 5, 12, 9);
 
-	detailSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetFinalMeshRes(evt.GetValue()); });
+	detailSpinner->Bind(wxEVT_SPINCTRL, [this](wxSpinEvent& evt) { canvas->renderer->SetFinalMeshRes(evt.GetValue()); });
 
 	detailGearButton = new wxButton(topBar, 10002, "", wxPoint(140, 5), wxSize(25, 25));
 	detailGearButton->SetBitmap(wxImage(25, 25, gearCol, gearAlpha, true));
@@ -106,7 +106,7 @@ void Main::OnGearPressed(wxCommandEvent&)
 	seedNumSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 5), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, 32, 131072, canvas->renderer->GetSeedNum());
 
-	seedNumSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt) { canvas->renderer->SetSeedNum(evt.GetValue()); });
+	seedNumSpinner->Bind(wxEVT_SPINCTRL, [this](wxSpinEvent& evt) { canvas->renderer->SetSeedNum(evt.GetValue()); });
 
 	new wxStaticText(dialogPanel, wxID_ANY, "Prefiltering Resolution", wxPoint(10, 38));
 	prefResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 35), wxSize(65, 25),
@@ -116,14 +116,14 @@ void Main::OnGearPressed(wxCommandEvent&)
 	finalResSpinner = new wxSpinCtrl(dialogPanel, wxID_ANY, "", wxPoint(140, 65), wxSize(65, 25),
 		wxALIGN_LEFT | wxSP_ARROW_KEYS, canvas->renderer->GetFilterMeshRes(), 12, canvas->renderer->GetFinalMeshRes());
 
-	prefResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt)
+	prefResSpinner->Bind(wxEVT_SPINCTRL, [=, this](wxSpinEvent& evt)
 		{
 			canvas->renderer->SetFilterMeshRes(evt.GetValue());
 			finalResSpinner->SetMin(evt.GetValue());
 			detailSpinner->SetMin(evt.GetValue());
 		});
 
-	finalResSpinner->Bind(wxEVT_SPINCTRL, [=](wxSpinEvent& evt)
+	finalResSpinner->Bind(wxEVT_SPINCTRL, [=, this](wxSpinEvent& evt)
 		{
 			canvas->renderer->SetFinalMeshRes(evt.GetValue());
 			detailSpinner->SetValue(evt.GetValue());
@@ -133,7 +133,7 @@ void Main::OnGearPressed(wxCommandEvent&)
 	// Buttons
 	wxButton* autoSeedsBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(215, 5), wxSize(60, 25));
 	autoSeedsBtn->SetToolTip("Automatically decide a number of seeds based on prefiltering resolution");
-	autoSeedsBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent&)
+	autoSeedsBtn->Bind(wxEVT_BUTTON, [=, this](wxCommandEvent&)
 		{
 			seedNumSpinner->SetValue((int)pow(4, 0.5 + prefResSpinner->GetValue()));
 			canvas->renderer->SetSeedNum(seedNumSpinner->GetValue());
@@ -141,7 +141,7 @@ void Main::OnGearPressed(wxCommandEvent&)
 
 	wxButton* autoResBtn = new wxButton(dialogPanel, wxID_ANY, "Auto", wxPoint(215, 35), wxSize(60, 25));
 	autoResBtn->SetToolTip("Automatically decide a prefiltering resolution based on the number of seeds");
-	autoResBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent&)
+	autoResBtn->Bind(wxEVT_BUTTON, [=, this](wxCommandEvent&)
 		{
 			prefResSpinner->SetValue((int)floor(log(seedNumSpinner->GetValue()) / log(4)));
 			canvas->renderer->SetFilterMeshRes(prefResSpinner->GetValue());
@@ -175,7 +175,7 @@ void Main::OnColWheelPressed(wxCommandEvent&)
 	wxColourPickerCtrl* clrPicker = new wxColourPickerCtrl(dlgPanel, wxID_ANY, { 0, 0, 0 }, { 10, 60 }, { 70, 25 });
 
 	// Choice box handler
-	eqnChoice->Bind(wxEVT_CHOICE, [=](wxCommandEvent&)
+	eqnChoice->Bind(wxEVT_CHOICE, [=, this](wxCommandEvent&)
 		{
 			int selection = eqnChoice->GetSelection();
 			if (selection != wxNOT_FOUND)
@@ -187,7 +187,7 @@ void Main::OnColWheelPressed(wxCommandEvent&)
 
 	// Button
 	wxButton* okBtn = new wxButton(dlgPanel, wxID_ANY, "Ok", { 10, 90 }, { 35, 25 });
-	okBtn->Bind(wxEVT_BUTTON, [=](wxCommandEvent&)
+	okBtn->Bind(wxEVT_BUTTON, [=, this](wxCommandEvent&)
 		{
 			int selection = eqnChoice->GetSelection();
 

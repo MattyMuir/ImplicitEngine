@@ -431,26 +431,26 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
 
 void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
 {
-#if 0
     TIMER(transform);
+#if 1
     std::vector<float> screenVerts;
     screenVerts.reserve(verts.size());
 
     double xScale = relXScale / w;
     double yScale = relYScale / h;
-    for (int i = 0; i < verts.size(); i += 2)
+    for (size_t i = 0; i < verts.size(); i += 2)
     {
         screenVerts.push_back((float)(verts[i] * xScale - xOffset));
         screenVerts.push_back((float)(verts[i + 1] * yScale - yOffset));
     }
-    STOP_LOG(transform);
+    //STOP_LOG(transform);
+    transform.Stop(false);
+    //std::cout << transform.GetDuration().count() << '\n';
 
     vb->SetData(screenVerts.data(), screenVerts.size() * sizeof(float));
     glUniform4f(shader->GetUniformLocation("col"), col.Red() / 255.0f, col.Green() / 255.0f, col.Blue() / 255.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, (int)screenVerts.size() / 2);
 #else
-
-    TIMER(transform);
     // Transformation constants
     double xScale = relXScale / w;
     double yScale = relYScale / h;
@@ -515,7 +515,9 @@ void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
             else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
         }
     }
-    STOP_LOG(transform);
+    //STOP_LOG(transform);
+    transform.Stop(false);
+    //std::cout << transform.GetDuration().count() << '\n';
 
     vb->SetData(screenVerts, verts.size() * sizeof(float));
     glUniform4f(shader->GetUniformLocation("col"), col.Red() / 255.0f, col.Green() / 255.0f, col.Blue() / 255.0f, 1.0f);
