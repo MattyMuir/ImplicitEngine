@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="Arch.h" />
     <ClInclude Include="basicshader" />
     <ClInclude Include="Bounds.h" />
     <ClInclude Include="Canvas.h" />
@@ -49,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Arch.cpp" />
     <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="FilteringRenderer.cpp" />
     <ClCompile Include="Function.cpp" />

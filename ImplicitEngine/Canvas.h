@@ -28,6 +28,7 @@
 #include "FilteringRenderer.h"
 #include "MarchingRenderer.h"
 #include "Timer.h"
+#include "Arch.h"
 
 typedef FilteringRenderer RendererType;
 
