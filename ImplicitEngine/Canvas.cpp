@@ -477,10 +477,10 @@ void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
         }
 
         // Complete transformations
-        if (Arch::HasInstructions<FMA4>())
+        if (Arch::HasInstructions<FMA>())
         {
             for (uint64_t pi = 0; pi < packNum; pi++)
-                outPacks[pi] = _mm256_cvtpd_ps(_mm256_msub_pd(packs[pi], mulPack, subPack));
+                outPacks[pi] = _mm256_cvtpd_ps(_mm256_fmsub_pd(packs[pi], mulPack, subPack));
         }
         else
         {
