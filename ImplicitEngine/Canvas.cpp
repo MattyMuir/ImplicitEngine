@@ -431,6 +431,8 @@ void Canvas::DrawMesh(const std::shared_ptr<Mesh>& mesh)
 
 void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
 {
+    if (verts.size() == 0) return;
+
     if (Arch::HasInstructions<AVX>())
     {
         TIMER(transform);
@@ -446,65 +448,51 @@ void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
         uint64_t vecStart = (offset == 0) ? 0 : (32 - offset) / 8;
         __m256d* packs = (__m256d*) & verts[vecStart];
         __m128* outPacks = (__m128*) & screenVerts[vecStart];
-        assert((uint64_t)packs % 32 == 0);
-        assert((uint64_t)outPacks % 16 == 0);
         uint64_t packNum = (verts.size() - vecStart) / 4;
 
-        if (verts.size() < 4)
+        // Compute first few transformations
+        for (uint64_t i = 0; i < vecStart; i++)
         {
-            // Vector is too small to utilize SIMD
-            for (uint64_t i = 0; i < verts.size(); i++)
-            {
-                if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
-                else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
-            }
+            if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
+            else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
         }
-        else
+
+        // Packed transformations
+        // Prepare packs for multiplication and subtraction
+        __m256d mulPack;
+        __m256d subPack;
+
+        for (int i = 0; i < 4; i++)
         {
-            // Compute first few transformations
-            for (uint64_t i = 0; i < vecStart; i++)
+            if ((i + vecStart) % 2 == 0)
             {
-                if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
-                else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
-            }
-
-            // Packed transformations
-            // Prepare packs for multiplication and subtraction
-            __m256d mulPack;
-            __m256d subPack;
-
-            for (int i = 0; i < 4; i++)
-            {
-                if ((i + vecStart) % 2 == 0)
-                {
-                    mulPack.m256d_f64[i] = xScale;
-                    subPack.m256d_f64[i] = xOffset;
-                }
-                else
-                {
-                    mulPack.m256d_f64[i] = yScale;
-                    subPack.m256d_f64[i] = yOffset;
-                }
-            }
-
-            // Complete transformations
-            if (Arch::HasInstructions<FMA4>())
-            {
-                for (uint64_t pi = 0; pi < packNum; pi++)
-                    outPacks[pi] = _mm256_cvtpd_ps(_mm256_msub_pd(packs[pi], mulPack, subPack));
+                mulPack.m256d_f64[i] = xScale;
+                subPack.m256d_f64[i] = xOffset;
             }
             else
             {
-                for (uint64_t pi = 0; pi < packNum; pi++)
-                    outPacks[pi] = _mm256_cvtpd_ps(_mm256_sub_pd(_mm256_mul_pd(packs[pi], mulPack), subPack));
+                mulPack.m256d_f64[i] = yScale;
+                subPack.m256d_f64[i] = yOffset;
             }
+        }
 
-            // Compute final few transformations
-            for (uint64_t i = vecStart + packNum * 4; i < verts.size(); i++)
-            {
-                if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
-                else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
-            }
+        // Complete transformations
+        if (Arch::HasInstructions<FMA4>())
+        {
+            for (uint64_t pi = 0; pi < packNum; pi++)
+                outPacks[pi] = _mm256_cvtpd_ps(_mm256_msub_pd(packs[pi], mulPack, subPack));
+        }
+        else
+        {
+            for (uint64_t pi = 0; pi < packNum; pi++)
+                outPacks[pi] = _mm256_cvtpd_ps(_mm256_sub_pd(_mm256_mul_pd(packs[pi], mulPack), subPack));
+        }
+
+        // Compute final few transformations
+        for (uint64_t i = vecStart + packNum * 4; i < verts.size(); i++)
+        {
+            if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
+            else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
         }
         STOP_LOG(transform);
 
