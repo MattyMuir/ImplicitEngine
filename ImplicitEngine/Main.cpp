@@ -279,5 +279,15 @@ std::string Main::ProcessEquationString(std::string_view eqnStr, bool* isValid)
 		return "0";
 	}
 
-	return splitEqn[0] + "-(" + splitEqn[1] + ")";
+	std::string funcExpr = splitEqn[0] + "-(" + splitEqn[1] + ")";
+
+	// Search for occurrences of ")("
+	uint64_t foundIndex = 0;
+	while ((foundIndex = funcExpr.find(")(", foundIndex)) != std::string::npos)
+	{
+		foundIndex++;
+		funcExpr.insert(funcExpr.begin() + foundIndex, '*');
+	}
+
+	return funcExpr;
 }

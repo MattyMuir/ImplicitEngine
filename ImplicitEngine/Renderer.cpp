@@ -27,9 +27,21 @@ void Renderer::JobPollLoop()
 
 		bool outdatedJobs = false;
 
-		// Lock-free, thread-safe loop over jobs
-		decltype(jobs)::iterator it = jobs.begin();
-		while (it != jobs.end())
+		// Pre declarations for goto happiness
+		decltype(jobs)::iterator itStart, it;
+		uint64_t startIndex;
+
+		// If job list is empty, no need to run loop
+		if (jobs.size() == 0) goto end_loop;
+
+		// Traverse to random starting position in list
+		itStart = jobs.begin();
+		startIndex = rand() % jobs.size();
+		for (uint64_t i = 0; i < startIndex; i++) itStart++;
+		
+		// Lock-free, thread-safe(ish) loop over jobs
+		it = itStart;
+		do
 		{
 			std::shared_ptr<Job> job = *it;
 
@@ -52,7 +64,9 @@ void Renderer::JobPollLoop()
 			}
 
 			it++;
-		}
+			if (it == jobs.end()) it = jobs.begin();
+		} while (it != itStart);
+end_loop:
 
 		if (deleteList.size() > 0)
 		{
