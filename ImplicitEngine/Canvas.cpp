@@ -436,60 +436,21 @@ void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
     if (Arch::HasInstructions<AVX>())
     {
         TIMER(transform);
-        // Transformation constants
         double xScale = relXScale / w;
         double yScale = relYScale / h;
+        __m256d mulPack = _mm256_setr_pd(xScale, yScale, xScale, yScale);
+        __m256d subPack = _mm256_setr_pd(xOffset, yOffset, xOffset, yOffset);
 
-        // Allocate output buffer, with same alignment as input buffer
-        size_t offset = (uint64_t)verts.data() % 32;
-        float* screenVerts = (float*)_aligned_offset_malloc(verts.size() * sizeof(float), 16, offset / 2);
-
-        // Calculate position of packs
-        uint64_t vecStart = (offset == 0) ? 0 : (32 - offset) / 8;
-        __m256d* packs = (__m256d*) & verts[vecStart];
-        __m128* outPacks = (__m128*) & screenVerts[vecStart];
-        uint64_t packNum = (verts.size() - vecStart) / 4;
-
-        // Compute first few transformations
-        for (uint64_t i = 0; i < vecStart; i++)
+        float* screenVerts = new float[verts.size()];
+        for (size_t packIdx = 0; packIdx < verts.size() / 4; packIdx++)
         {
-            if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
-            else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
+            __m256d pack = _mm256_loadu_pd(verts.data() + packIdx * 4);
+            __m128 transformed = _mm256_cvtpd_ps(_mm256_fmsub_pd(pack, mulPack, subPack));
+            _mm_storeu_ps(screenVerts + packIdx * 4, transformed);
         }
 
-        // Packed transformations
-        // Prepare packs for multiplication and subtraction
-        __m256d mulPack;
-        __m256d subPack;
-
-        for (int i = 0; i < 4; i++)
-        {
-            if ((i + vecStart) % 2 == 0)
-            {
-                mulPack.m256d_f64[i] = xScale;
-                subPack.m256d_f64[i] = xOffset;
-            }
-            else
-            {
-                mulPack.m256d_f64[i] = yScale;
-                subPack.m256d_f64[i] = yOffset;
-            }
-        }
-
-        // Complete transformations
-        if (Arch::HasInstructions<FMA>())
-        {
-            for (uint64_t pi = 0; pi < packNum; pi++)
-                outPacks[pi] = _mm256_cvtpd_ps(_mm256_fmsub_pd(packs[pi], mulPack, subPack));
-        }
-        else
-        {
-            for (uint64_t pi = 0; pi < packNum; pi++)
-                outPacks[pi] = _mm256_cvtpd_ps(_mm256_sub_pd(_mm256_mul_pd(packs[pi], mulPack), subPack));
-        }
-
-        // Compute final few transformations
-        for (uint64_t i = vecStart + packNum * 4; i < verts.size(); i++)
+        // Finish remaining values serially
+        for (uint64_t i = (verts.size() / 4) * 4; i < verts.size(); i++)
         {
             if (i % 2 == 0) screenVerts[i] = (float)(verts[i] * xScale - xOffset);
             else screenVerts[i] = (float)(verts[i + 1] * yScale - yOffset);
@@ -499,7 +460,7 @@ void Canvas::DrawContour(const std::vector<double>& verts, const wxColour& col)
         vb->SetData(screenVerts, verts.size() * sizeof(float));
         glUniform4f(shader->GetUniformLocation("col"), col.Red() / 255.0f, col.Green() / 255.0f, col.Blue() / 255.0f, 1.0f);
         glDrawArrays(GL_LINES, 0, (int)verts.size() / 2);
-        _aligned_free(screenVerts);
+        delete[] screenVerts;
     }
     else
     {
